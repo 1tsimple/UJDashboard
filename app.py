@@ -19,6 +19,7 @@ from dash import callback_context
 from components.header import get_header
 
 app = dash.Dash(__name__, use_pages=True)
+server = app.server
 
 app.layout = html.Div(id="main-body", children=[
   html.Header(children=get_header()),
