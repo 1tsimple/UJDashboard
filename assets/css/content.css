@@ -1,0 +1,30 @@
+:root {
+  --bg-red: #AB0000;
+  --bg-green: #00cc95;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#homepage-container {
+  padding-top: 45px;
+  width: 100%;
+  height: auto;
+}
+
+#content-container {
+  text-align: center;
+  margin: 0 5% 0 5%;
+}
+
+#all-graphs-container {
+  display: inline-block;
+  width: 100%;
+}
+
+#add-button-wrapper {
+  display: inline-block;
+  display: none; 
+}
