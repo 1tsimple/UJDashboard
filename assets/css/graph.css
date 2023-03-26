@@ -1,12 +1,4 @@
-.graph-container-outer {
-  width: 100%;
-  height: 400px;
-  position: relative;
-  margin-top: 5px;
-}
-
 /* ---------- GRAPH CLOSE BUTTON ---------- */
-
 .close-button-wrapper {
   width: 20px;
   height: 20px;
@@ -44,9 +36,77 @@
 .close-button-text-wrapper:hover span {
   color: var(--bg-red);
 }
-
 /* ---------- GRAPH CLOSE BUTTON ---------- */
 
+/* ---------- GRAPGH FILTER SECTION ---------- */
 .filter-container {
-  width: 500px;
+  width: 92%;
+  padding: 12px 4% 0 4%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.filter-container > div {
+  width: 33%;
+}
+
+.filter-container > .dash-dropdown .Select-input {
+  height: 41.88px;
+}
+
+.filter-container > .dash-dropdown .Select-control{
+  height: 43.88px;
+}
+
+.filter-container > .dash-dropdown .Select-placeholder{
+  line-height: 41.88px;
+}
+
+.groupby-filter-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.groupby-filter-wrapper > span {
+  font-size: 12px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  text-transform: uppercase;
+}
+
+.groupby-filter {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.groupby-filter > label:first-child {
+  padding: 2px 75px 2px 0;
+  cursor: pointer;
+}
+
+.groupby-filter > label:nth-last-child(-n+2) {
+  padding: 2px 45px 2px 0;
+  cursor: pointer;
+}
+
+.groupby-filter > label > * {
+  cursor: pointer;
+}
+
+.groupby-label {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  position: absolute;
+  top: 3px;
+}
+/* ---------- GRAPGH FILTER SECTION ---------- */
+
+.graph-container-outer {
+  width: 100%;
+  position: relative;
+  margin-top: 5px;
+  box-shadow: 0px 0px 6px 6px rgba(0, 0, 0, 0.03);
+}
+
+.graph-container > .dash-graph {
+  height: 400px;
 }

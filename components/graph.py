@@ -14,8 +14,26 @@ def get_graph():
       dcc.Dropdown(
         id={"type": "product-filter"},
         placeholder="Select a product",
-        clearable=False
-      )
+        clearable=False,
+      ),
+      html.Div(id="filter", className="filter", children=[
+        html.Button(id={"type": "filter-button"}, className="filter-button", children=[
+          html.Span(children="Filter")
+        ]),
+      ]),
+      html.Div(className="groupby-filter-wrapper", children=[
+        html.Span(children="Group By"),
+        dcc.Checklist(
+          id={"type": "groupby-filter"},
+          className="groupby-filter",
+          options=[
+            {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Marketplace"))], "value": "value1"},
+            {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Listing"))], "value": "value2"},
+            {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Variant"))], "value": "value3"},
+          ],
+          labelStyle={"display": "flex", "position": "relative"}
+        )
+      ])
     ]),
     html.Div(id="graph-container-inner", className="graph-container-inner", children=[
       html.Div(id="graph-container", className="graph-container", children=[
