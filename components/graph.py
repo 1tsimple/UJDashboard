@@ -1,5 +1,8 @@
 import dash
+import dash_bootstrap_components as dbc
 from dash import html, dcc
+
+
 
 def get_graph():
   return html.Div(id="graph-container-outer", className="graph-container-outer", children=[
@@ -23,7 +26,7 @@ def get_graph():
       ]),
       html.Div(className="groupby-filter-wrapper", children=[
         html.Span(children="Group By"),
-        dcc.Checklist(
+        dcc.RadioItems(
           id={"type": "groupby-filter"},
           className="groupby-filter",
           options=[
@@ -31,7 +34,7 @@ def get_graph():
             {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Listing"))], "value": "value2"},
             {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Variant"))], "value": "value3"},
           ],
-          labelStyle={"display": "flex", "position": "relative"}
+          labelStyle={"display": "flex", "position": "relative"},
         )
       ])
     ]),
