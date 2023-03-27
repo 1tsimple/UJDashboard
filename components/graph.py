@@ -26,15 +26,17 @@ def get_graph():
       ]),
       html.Div(className="groupby-filter-wrapper", children=[
         html.Span(children="Group By"),
-        dcc.RadioItems(
+        dbc.RadioItems(
           id={"type": "groupby-filter"},
           className="groupby-filter",
           options=[
-            {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Marketplace"))], "value": "value1"},
-            {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Listing"))], "value": "value2"},
-            {"label": [html.Div(className="groupby-label-wrapper", children=html.Span(className="groupby-label", children="Variant"))], "value": "value3"},
+            {"label": "None", "value": None},
+            {"label": "Marketplace", "value": "value1"},
+            {"label": "Listing", "value": "value2"},
+            {"label": "Variant", "value": "value3"},
           ],
-          labelStyle={"display": "flex", "position": "relative"},
+          label_checked_style={"color": "black"},
+          value=None
         )
       ])
     ]),
