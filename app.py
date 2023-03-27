@@ -13,12 +13,13 @@ logging.basicConfig(
 # ---------- IMPORTS ----------
 
 import dash
+import dash_bootstrap_components as dbc
 from dash import html, Input, Output, State, ALL, MATCH
 from dash import callback_context
 
 from components.header import get_header
 
-app = dash.Dash(__name__, use_pages=True)
+app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME])
 server = app.server
 
 app.layout = html.Div(id="main-body", children=[

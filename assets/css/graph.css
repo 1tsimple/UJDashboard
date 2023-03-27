@@ -40,20 +40,18 @@
 
 /* ---------- GRAPH FILTER SECTION START ---------- */
 .filter-container {
-  width: 92%;
+  width: 100%;
   padding: 12px 4% 0 4%;
+  margin: 0;
   display: flex;
   justify-content: space-between;
 }
 
 .filter-container > div {
   width: 32%;
+  height: 44px;
 }
 /* PRODUCT DROPDOWN START */
-.filter-container > .dash-dropdown .Select-input {
-  height: 41.88px;
-}
-
 .filter-container > .dash-dropdown .Select-input > input {
   padding: 13.95px 0;
   font-family: sans-serif;
@@ -61,11 +59,12 @@
 }
 
 .filter-container > .dash-dropdown .Select-control{
-  height: 43.88px;
+  height: 43.99px;
 }
 
 .filter-container > .dash-dropdown .Select-placeholder{
-  line-height: 41.88px;
+  line-height: 41.99px;
+  font-size: 12px;
 }
 /* PRODUCT DROPDOWN END */
 
@@ -88,15 +87,23 @@
 .groupby-filter-wrapper {
   border: 1px solid #ccc;
   border-radius: 4px;
+  position: relative;
 }
 
 .groupby-filter-wrapper > span {
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 2px;
   font-size: 12px;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   text-transform: uppercase;
 }
 
 .groupby-filter {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
   display: flex;
   justify-content: space-evenly;
 }
@@ -104,6 +111,7 @@
 .groupby-filter > div {
   display: flex;
   position: relative;
+  margin-left: 2.2vw;
 }
 
 .groupby-filter > div:nth-child(1) {
@@ -123,12 +131,12 @@
 }
 
 .groupby-filter > div > label {
-  position: absolute;
   font-family: sans-serif;
   font-size: 12px;
   color: rgba(0, 0, 0, 0.6);
-  left: 20px;
-  top: 4.3px;
+  position: absolute;
+  left: -4px;
+  top: 5px;
 }
 
 /* GROUPBY SECTION END */
@@ -140,6 +148,7 @@
   position: relative;
   margin-top: 5px;
   box-shadow: 0px 0px 6px 6px rgba(0, 0, 0, 0.03);
+  z-index: 1;
 }
 
 .graph-container > .dash-graph {
