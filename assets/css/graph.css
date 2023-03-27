@@ -101,27 +101,24 @@
   justify-content: space-evenly;
 }
 
-.groupby-filter > div:nth-child(1) {
+.groupby-filter > div {
   display: flex;
   position: relative;
+}
+
+.groupby-filter > div:nth-child(1) {
   padding: 2px 30px 2px 0;
 }
 
 .groupby-filter > div:nth-child(2) {
-  display: flex;
-  position: relative;
   padding: 2px 68px 2px 0;
 }
 
 .groupby-filter > div:nth-child(3) {
-  display: flex;
-  position: relative;
   padding: 2px 38px 2px 0;
 }
 
 .groupby-filter > div:nth-child(4) {
-  display: flex;
-  position: relative;
   padding: 2px 40px 2px 0;
 }
 
