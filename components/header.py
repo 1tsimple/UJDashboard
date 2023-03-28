@@ -18,13 +18,13 @@ def get_header():
         html.Li(id=pages["pages.database"]["name"], children=dcc.Link(
           href=pages["pages.database"]["path"], children=[
             html.Span(children=pages["pages.database"]["name"]),
-            html.I(id="home-icon", className="fa-solid fa-database")
+            html.I(id="database-icon", className="fa-solid fa-database")
           ]
         )),
         html.Li(id=pages["pages.log"]["name"], children=dcc.Link(
           href=pages["pages.log"]["path"], children=[
             html.Span(children=pages["pages.log"]["name"]),
-            html.I(id="home-icon", className="fa-solid fa-file-lines")
+            html.I(id="log-icon", className="fa-solid fa-file-lines")
           ]
         ))
       ])
