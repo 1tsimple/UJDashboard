@@ -66,17 +66,29 @@
   line-height: 41.99px;
   font-size: 12px;
 }
+
+.filter-container > .dash-dropdown .Select-value-label {
+  line-height: 41.99px;
+  font-family: sans-serif;
+  font-size: 14px;
+}
+
+.filter-container > .dash-dropdown .Select-menu-outer {
+  font-family: sans-serif;
+  font-size: 12px;
+}
 /* PRODUCT DROPDOWN END */
 
 /* FILTER SECTION START */
 .filter {
   position: relative;
   z-index: 2;
+  border-radius: 4px;
 }
 
 .filter-button {
   background-color: white;
-  border: 1px solid #ccc;
+  border: 1px solid var(--bg-grey);
   border-radius: 4px;
   width: 100%;
   height: 43.99px;
@@ -94,7 +106,7 @@
   width: 200%;
   left: -50%;
   background-color: white;
-  border: 1px solid #ccc;
+  border: 1px solid var(--bg-grey);
   border-radius: 4px;
   padding: 5px;
   margin-top: 10px;
@@ -109,11 +121,36 @@
 .filter-dropdowns-wrapper > div {
   width: 32%;
 }
+
+.filter-dropdowns-wrapper > div .Select-placeholder {
+  font-size: 12px;
+}
+
+.filter-apply-button {
+  background-color: transparent;
+  border: 2px solid var(--bg-grey);
+  border-radius: 4px;
+}
+
+.filter-apply-button:hover {
+  border-color: var(--bg-blue);
+}
+
+.filter-apply-button:focus {
+  box-shadow: 0px 0px 0px 4px var(--bg-blue-alpha);
+}
+
+.filter-apply-button span {
+  font-family: sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+}
 /* FILTER SECTION END */
 
 /* GROUPBY SECTION START */
 .groupby-filter-wrapper {
-  border: 1px solid #ccc;
+  border: 1px solid var(--bg-grey);
   border-radius: 4px;
   position: relative;
 }
@@ -161,7 +198,6 @@
 .groupby-filter > div > label {
   font-family: sans-serif;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
   position: absolute;
   left: -4px;
   top: 5px;

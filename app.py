@@ -31,6 +31,7 @@ app.layout = html.Div(id="main-body", children=[
 
 @app.callback(
   Output({"type": "filter", "uuid": MATCH}, "style"),
+  Output({"type": "filter-button", "uuid": MATCH}, "style"),
   Input({"type": "filter-button", "uuid": MATCH}, "n_clicks"),
   Input({"type": "filter-apply-button", "uuid": MATCH}, "n_clicks"),
   State({"type": "filter", "uuid": MATCH}, "style"),
@@ -38,14 +39,6 @@ app.layout = html.Div(id="main-body", children=[
 )
 def toggle_filter_callback(filter_button_click: int, apply_button_click: int, style: dict[str, str]):
   return toggle_filter(style)
-
-@app.callback(
-  Output({"type": "filter-apply-button", "uuid": MATCH}, "n_clicks"),
-  Input({"type": "filter-button", "uuid": MATCH}, "n_clicks"),
-  prevent_initial_call=True
-)
-def reset_apply_button_callback(click: int):
-  return 0
 
 if __name__ == "__main__":
   app.run(debug=True)

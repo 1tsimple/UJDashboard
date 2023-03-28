@@ -1,6 +1,9 @@
 :root {
   --bg-red: #AB0000;
   --bg-green: #00cc95;
+  --bg-grey: #ccc;
+  --bg-blue: #0d6efd;
+  --bg-blue-alpha: #0d6efd1a;
 }
 
 body {
