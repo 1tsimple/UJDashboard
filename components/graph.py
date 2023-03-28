@@ -33,17 +33,20 @@ def get_graph(uuid: uuid.UUID):
             dcc.Dropdown(
               id={"type": "marketplace-filter", "uuid": uuid},
               placeholder="Select marketplaces",
-              clearable=False
+              clearable=False,
+              multi=True
             ),
             dcc.Dropdown(
               id={"type": "listing-filter", "uuid": uuid},
               placeholder="Select SKUs",
-              clearable=False
+              clearable=False,
+              multi=True
             ),
             dcc.Dropdown(
               id={"type": "variant-filter", "uuid": uuid},
               placeholder="Select variants",
-              clearable=False
+              clearable=False,
+              multi=True
             )
           ]),
           html.Button(id={"type": "filter-apply-button", "uuid": uuid}, className="filter-apply-button", n_clicks=0, children=[

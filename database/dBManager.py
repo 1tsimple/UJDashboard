@@ -20,7 +20,7 @@ import json
 import pandas as pd
 from re import search
 from itertools import cycle
-from typing import Any, Self
+from typing import Any, Self, Generator
 from datetime import datetime, timezone, timedelta
 from sp_api.base import Marketplaces
 from sp_api.api import Orders, Finances
@@ -207,16 +207,17 @@ class Puller:
     self.client = client
     logging.debug("Puller object has been created and initialized. {debug_info}".format(debug_info={"ObjectID": id(self)}))
   
-  def get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> list[dict[str, Any]]:
+  def get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> Generator[dict[str, Any], None, None]:
     with self.client("mongodb://localhost:27017") as client:
       data = client.Amazon[collection_name].find(filters, {field: 1 for field in fields})
-      return [i for i in data]
+      for i in data:
+        yield i
   
   def get_product_options(self) -> list[dict[str, str]]:
     products = pd.DataFrame(self.get("Products", ["_id", "Name"]))
     products = products.groupby("Name").agg(lambda x: list(x))
     options = products.to_dict()["_id"]
-    return [{"label": name, "value": json.dumps(asins)} for name, asins in options.items()]
+    return [{"label": name, "value": json.dumps(ASINs)} for name, ASINs in options.items()]
 
 if __name__ == "__main__":
   import time
