@@ -3,7 +3,9 @@ import dash_bootstrap_components as dbc
 import uuid
 from dash import html, dcc
 
+from database.dBManager import DBManager
 
+db = DBManager()
 
 def get_graph(uuid: uuid.UUID):
   uuid = str(uuid)
@@ -18,10 +20,7 @@ def get_graph(uuid: uuid.UUID):
     html.Div(className="filter-container", children=[
       dcc.Dropdown(
         id={"type": "product-filter", "uuid": uuid},
-        options=[
-          {"label": "option1", "value": 1},
-          {"label": "option2", "value": 2},
-        ],
+        options=db.puller.get_product_options(),
         placeholder="Select a product",
         clearable=False,
       ),

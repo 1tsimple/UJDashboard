@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-class Order(StrEnum):
+class OrderKey(StrEnum):
   _id = "_id"
   BuyerInfo = "BuyerInfo"
   DefaultShipFromLocationAddress = "DefaultShipFromLocationAddress"
@@ -37,7 +37,7 @@ class Order(StrEnum):
   MarketplaceId = "MarketplaceId"
   UpdatedAt = "UpdatedAt"
 
-class OItem(StrEnum):
+class OItemKey(StrEnum):
   _id = "_id"
   Order_id = "Order_id"
   ASIN = "ASIN"

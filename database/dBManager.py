@@ -16,6 +16,8 @@ import threading
 import multiprocessing as mp
 import pymongo
 import csv
+import json
+import pandas as pd
 from re import search
 from itertools import cycle
 from typing import Any, Self
@@ -23,9 +25,9 @@ from datetime import datetime, timezone, timedelta
 from sp_api.base import Marketplaces
 from sp_api.api import Orders, Finances
 
-from amazon.api import AmazonApiManager
-from utils.payloadKeyNames import Order, OItem
-from utils.dtypeFixer import fix_dtype_cython # type: ignore
+from .amazon.api import AmazonApiManager
+from .utils.constant import OrderKey, OItemKey
+from .utils.dtypeFixer import fix_dtype_cython # type: ignore
 
 # ----- Singleton Database Manager -----
 class DBManager:
@@ -108,12 +110,12 @@ class Inserter:
   
   def __order_to_json(self, order: dict[str, Any]) -> dict[str, Any]:
     copy = order.copy()
-    copy.update({key: self._str_to_date(copy.get(key)) for key in [Order.EarliestDeliveryDate, Order.LatestDeliveryDate, Order.EarliestShipDate, Order.LatestShipDate, Order.LastUpdateDate, Order.PurchaseDate]})
-    return {Order._id: copy.pop("AmazonOrderId")} | copy | {Order.UpdatedAt: datetime.today().astimezone()}
+    copy.update({key: self._str_to_date(copy.get(key)) for key in [OrderKey.EarliestDeliveryDate, OrderKey.LatestDeliveryDate, OrderKey.EarliestShipDate, OrderKey.LatestShipDate, OrderKey.LastUpdateDate, OrderKey.PurchaseDate]})
+    return {OrderKey._id: copy.pop("AmazonOrderId")} | copy | {OrderKey.UpdatedAt: datetime.today().astimezone()}
   
   def __order_items_to_json(self, order_items: dict[str, Any]) -> dict[str, Any]:
     copy = order_items.copy()
-    return [{OItem._id: order_item.pop("OrderItemId")} | {OItem.Order_id: copy["AmazonOrderId"]} | order_item | {OItem.UpdatedAt: datetime.today().astimezone()} for order_item in copy["OrderItems"]]
+    return [{OItemKey._id: order_item.pop("OrderItemId")} | {OItemKey.Order_id: copy["AmazonOrderId"]} | order_item | {OItemKey.UpdatedAt: datetime.today().astimezone()} for order_item in copy["OrderItems"]]
   
   def __order_finances_to_json(self, order_finances):
     raise NotImplemented()
@@ -205,14 +207,22 @@ class Puller:
     self.client = client
     logging.debug("Puller object has been created and initialized. {debug_info}".format(debug_info={"ObjectID": id(self)}))
   
-  def get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> Any:
-    with self.client() as client:
+  def get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> list[dict[str, Any]]:
+    with self.client("mongodb://localhost:27017") as client:
       data = client.Amazon[collection_name].find(filters, {field: 1 for field in fields})
-    return data
+      return [i for i in data]
+  
+  def get_product_options(self) -> list[dict[str, str]]:
+    products = pd.DataFrame(self.get("Products", ["_id", "Name"]))
+    products = products.groupby("Name").agg(lambda x: list(x))
+    options = products.to_dict()["_id"]
+    return [{"label": name, "value": json.dumps(asins)} for name, asins in options.items()]
 
 if __name__ == "__main__":
   import time
+  import pandas as pd
   from pprint import pprint
   db = DBManager()
-  path = os.path.abspath(r"C:\Users\salih\Desktop\Downloaded Documents\Amazon Search Terms_Search Terms_US.csv")
-  db.inserter._get_top_keywords(path)
+  #path = os.path.abspath(r"C:\Users\salih\Desktop\Downloaded Documents\Amazon Search Terms_Search Terms_US.csv")
+  op = db.puller.get_product_options()
+  print(op)
