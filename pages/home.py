@@ -9,6 +9,7 @@ from components.graph import get_graph
 layout = html.Section(id="homepage-container", children=[
   html.Div(id="content-container", children=[
     html.Div(id="all-graphs-container", children=[
+      get_graph(uuid.uuid4()),
       get_graph(uuid.uuid4())
     ]),
     html.Div(id="add-button-wrapper", children=[

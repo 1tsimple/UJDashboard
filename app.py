@@ -49,6 +49,7 @@ db = DBManager()
   Input("refresh-dropdown-options", "n_intervals")
 )
 def refresh_product_options(interval):
-  return [db.puller.get_product_options()]
+  return [db.puller.get_product_options() for _ in range(len(ctx.outputs_list))]
+
 if __name__ == "__main__":
   app.run(debug=True)
