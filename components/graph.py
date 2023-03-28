@@ -24,6 +24,7 @@ def get_graph(uuid: uuid.UUID):
         placeholder="Select a product",
         clearable=False,
       ),
+      dcc.Interval(id="refresh-dropdown-options", interval=5000, n_intervals=0),
       html.Div(id={"type": "filter", "uuid": uuid}, className="filter", style={"overflow": "hidden"}, children=[
         html.Button(id={"type": "filter-button", "uuid": uuid}, className="filter-button", n_clicks=0, children=[
           html.Span(children="Filter")

@@ -209,8 +209,8 @@ class Puller:
   
   def get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> Generator[dict[str, Any], None, None]:
     with self.client("mongodb://localhost:27017") as client:
-      data = client.Amazon[collection_name].find(filters, {field: 1 for field in fields})
-      for i in data:
+      cursor = client.Amazon[collection_name].find(filters, {field: 1 for field in fields})
+      for i in cursor:
         yield i
   
   def get_product_options(self) -> list[dict[str, str]]:

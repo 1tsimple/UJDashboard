@@ -14,7 +14,7 @@ logging.basicConfig(
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import html, Input, Output, State, ALL, MATCH, ctx
+from dash import html, dcc, Input, Output, State, ALL, MATCH, ctx
 
 from components.header import get_header
 from components.footer import get_footer
@@ -26,7 +26,7 @@ server = app.server
 app.layout = html.Div(id="main-body", children=[
   html.Header(children=get_header()),
   dash.page_container,
-  html.Footer(id="footer-container", children=get_footer())
+  html.Footer(id="footer-container", children=get_footer()),
 ])
 
 @app.callback(
@@ -40,5 +40,15 @@ app.layout = html.Div(id="main-body", children=[
 def toggle_filter_callback(filter_button_click: int, apply_button_click: int, style: dict[str, str]):
   return toggle_filter(style)
 
+from database.dBManager import DBManager
+
+db = DBManager()
+
+@app.callback(
+  Output({"type": "product-filter", "uuid": ALL}, "options"),
+  Input("refresh-dropdown-options", "n_intervals")
+)
+def refresh_product_options(interval):
+  return [db.puller.get_product_options()]
 if __name__ == "__main__":
   app.run(debug=True)
