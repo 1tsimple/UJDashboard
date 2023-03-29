@@ -25,9 +25,9 @@ from datetime import datetime, timezone, timedelta
 from sp_api.base import Marketplaces
 from sp_api.api import Orders, Finances
 
-from .amazon.api import AmazonApiManager
-from .utils.constant import OrderKey, OItemKey
-from .utils.dtypeFixer import fix_dtype_cython # type: ignore
+from amazon.api import AmazonApiManager
+from utils.constant import OrderKey, OItemKey, OFinancesKey
+from utils.dtypeFixer import fix_dtype_cython # type: ignore
 
 # ----- Singleton Database Manager -----
 class DBManager:
@@ -97,8 +97,15 @@ class Inserter:
       logging.info("Order items of '{order_id}' have been acquired. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
       return order_items
   
-  def _get_order_finances(self):
-    raise NotImplemented()
+  def _get_order_finances(self, order_id: str, marketplace=Marketplaces.US):
+    logging.info("Getting finances of order '{order_id}' via api. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
+    try:
+      order_finances = self.api.get_payload(Finances, marketplace, "get_financial_events_for_order", "FinancialEvents", reqkwargs={"order_id": order_id})
+    except Exception as e:
+      logging.critical("Unable to get finances of order '{order_id}'. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
+    else:
+      logging.info("Finances of order '{order_id}' have been acquired. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
+      return {OFinancesKey._id: order_id} | order_finances
   
   def _fix_dtype(self, value: Any) -> Any:
     return fix_dtype_cython(value, {"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}})
@@ -207,14 +214,14 @@ class Puller:
     self.client = client
     logging.debug("Puller object has been created and initialized. {debug_info}".format(debug_info={"ObjectID": id(self)}))
   
-  def get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> Generator[dict[str, Any], None, None]:
+  def _get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> Generator[dict[str, Any], None, None]:
     with self.client("mongodb://localhost:27017") as client:
       cursor = client.Amazon[collection_name].find(filters, {field: 1 for field in fields})
       for i in cursor:
         yield i
   
   def get_product_options(self) -> list[dict[str, str]]:
-    products = pd.DataFrame(self.get("Products", ["_id", "Name"]))
+    products = pd.DataFrame(self._get("Products", ["_id", "Name"]))
     products = products.groupby("Name").agg(lambda x: list(x))
     options = products.to_dict()["_id"]
     return [{"label": name, "value": json.dumps(ASINs)} for name, ASINs in options.items()]
@@ -225,5 +232,5 @@ if __name__ == "__main__":
   from pprint import pprint
   db = DBManager()
   #path = os.path.abspath(r"C:\Users\salih\Desktop\Downloaded Documents\Amazon Search Terms_Search Terms_US.csv")
-  op = db.puller.get_product_options()
-  print(op)
+  data = db.inserter._get_order_finances("111-1769310-5241063")
+  pprint(data)
