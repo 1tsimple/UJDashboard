@@ -62,7 +62,7 @@ class Inserter:
     logging.info("Updating the orders created after '{date}'. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     orders = self._get_orders(created_after, marketplace)
     order_items = [self._get_order_items(order["AmazonOrderId"]) for order in orders]
-    order_finances = []
+    order_finances = [self._get_order_finances(order["AmazonOrderId"]) for order in orders]
     logging.info("All the data of orders created after '{date}' has been pulled. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     
     logging.info("Changing data types of values in orders data created after '{date}' into appropriate form to insert into database. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
@@ -70,11 +70,12 @@ class Inserter:
       orders, order_items, order_finances = pool.map(self._fix_dtype, (orders, order_items, order_finances))
     orders = list(map(self.__order_to_json, orders))
     order_items = [item for items in map(self.__order_items_to_json, order_items) for item in items]
+    order_finances = list(map(self.__order_finances_to_json, order_finances))
     logging.info("Data types of orders data created after '{date}' have been changed into appropriate form. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     
     logging.info("Inserting orders created after '{date}' into database. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     with mp.Pool(3) as pool:
-      pool.starmap(self.insert_or_update_many, (("Orders", orders, "_id"), ("OrderItems", order_items, "_id")))
+      pool.starmap(self.insert_or_update_many, (("Orders", orders, "_id"), ("OrderItems", order_items, "_id"), ("Finances", order_finances, "_id")))
     logging.info("Orders created after '{date}' have been inserted into database. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
   
   def _get_orders(self, created_after: str, marketplace=Marketplaces.US) -> list[dict[str, Any]]:
@@ -97,7 +98,7 @@ class Inserter:
       logging.info("Order items of '{order_id}' have been acquired. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
       return order_items
   
-  def _get_order_finances(self, order_id: str, marketplace=Marketplaces.US):
+  def _get_order_finances(self, order_id: str, marketplace=Marketplaces.US) -> dict[str, Any]:
     logging.info("Getting finances of order '{order_id}' via api. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     try:
       order_finances = self.api.get_payload(Finances, marketplace, "get_financial_events_for_order", "FinancialEvents", reqkwargs={"order_id": order_id})
@@ -124,8 +125,16 @@ class Inserter:
     copy = order_items.copy()
     return [{OItemKey._id: order_item.pop("OrderItemId")} | {OItemKey.Order_id: copy["AmazonOrderId"]} | order_item | {OItemKey.UpdatedAt: datetime.today().astimezone()} for order_item in copy["OrderItems"]]
   
-  def __order_finances_to_json(self, order_finances):
-    raise NotImplemented()
+  def __order_finances_to_json(self, order_finances: dict[str, Any]) -> dict[str, Any]:
+    copy = order_finances.copy()
+    order_id = copy.pop(OFinancesKey._id)
+    def fix_dtypes(finance):
+      if finance.get("AmazonOrderId") is not None:
+          finance.pop("AmazonOrderId")
+      if finance.get("PostedDate") is not None:
+        finance["PostedDate"] = self._str_to_date(finance["PostedDate"])
+    [fix_dtypes(finance) for finances in copy.values() if finances is not None for finance in finances]
+    return {OFinancesKey._id: order_id} | copy | {OFinancesKey.UpdatedAt: datetime.today().astimezone()}
   
   def add_weekly_top_keywords(self, path: str) -> None:
     keywords = self._get_top_keywords(path)
@@ -190,7 +199,7 @@ class Inserter:
       logging.info("The data has been inserted into collection '{collection}'. {DebugInfo}".format(collection=collection_name, DebugInfo=self.__debug_information))
   
   def insert_or_update_one(self, collection_name: str, document: dict[str, Any], key: str) -> None:
-    with self.client() as client:
+    with self.client("mongodb://localhost:27017") as client:
       client.Amazon[collection_name].replace_one({key: document[key]}, document, upsert=True)
   
   def insert_or_update_many(self, collection_name: str, documents: list[dict[str, Any]], key: str) -> None:
@@ -200,7 +209,7 @@ class Inserter:
         replacement=document,
         upsert=True
       ) for document in documents]
-      with self.client() as client:
+      with self.client("mongodb://localhost:27017") as client:
         client.Amazon[collection_name].bulk_write(bulk_operations)
     except Exception:
       logging.critical("Error occurred while inserting data into collection '{collection}'!".format(collection=collection_name), exc_info=True)
@@ -232,5 +241,4 @@ if __name__ == "__main__":
   from pprint import pprint
   db = DBManager()
   #path = os.path.abspath(r"C:\Users\salih\Desktop\Downloaded Documents\Amazon Search Terms_Search Terms_US.csv")
-  data = db.inserter._get_order_finances("111-1769310-5241063")
-  pprint(data)
+  db.inserter.update_orders("2023-03-01", Marketplaces.CA)

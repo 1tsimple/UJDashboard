@@ -100,3 +100,4 @@ class OFinancesKey(StrEnum):
   TaxWithholdingEventList = "TaxWithholdingEventList"
   TrialShipmentEventList = "TrialShipmentEventList"
   ValueAddedServiceChargeEventList = "ValueAddedServiceChargeEventList"
+  UpdatedAt = "UpdatedAt"
