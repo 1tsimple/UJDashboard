@@ -20,8 +20,9 @@ import json
 import pandas as pd
 from re import search
 from itertools import cycle
-from typing import Any, Self, Generator
+from typing import Any, Self, Generator, Literal
 from datetime import datetime, timezone, timedelta
+from concurrent.futures import ThreadPoolExecutor
 from sp_api.base import Marketplaces
 from sp_api.api import Orders, Finances
 
@@ -53,7 +54,7 @@ class DBManager:
 class Inserter: 
   # debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}
   __slots__ = ("client", "api",)
-  def __init__(self, client: pymongo.MongoClient) -> None:
+  def __init__(self, client: type[pymongo.MongoClient]) -> None:
     self.client = client
     self.api = AmazonApiManager()
     logging.debug("Inserter object has been created and initialized. {debug_info}".format(debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
@@ -78,7 +79,7 @@ class Inserter:
       pool.starmap(self.insert_or_update_many, (("Orders", orders, "_id"), ("OrderItems", order_items, "_id"), ("Finances", order_finances, "_id")))
     logging.info("Orders created after '{date}' have been inserted into database. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
   
-  def _get_orders(self, created_after: str, marketplace=Marketplaces.US) -> list[dict[str, Any]]:
+  def _get_orders(self, created_after: str, marketplace=Marketplaces.US) -> list[dict[str, Any]]: # type: ignore
     logging.info("Getting orders created after '{date}' via api. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     try: 
       orders = self.api.get_payload(Orders, marketplace, "get_orders", "Orders", reqkwargs={"CreatedAfter": created_after})
@@ -88,7 +89,7 @@ class Inserter:
       logging.info("Orders created after '{date}' have been acquired. {debug_info}".format(date=created_after, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
       return orders
   
-  def _get_order_items(self, order_id: str, marketplace=Marketplaces.US) -> list[dict[str, Any]]:
+  def _get_order_items(self, order_id: str, marketplace=Marketplaces.US) -> list[dict[str, Any]]: # type: ignore
     logging.info("Getting order items of '{order_id}' via api. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     try: 
       order_items = self.api.get_payload(Orders, marketplace, "get_order_items", reqkwargs={"order_id": order_id})
@@ -98,7 +99,7 @@ class Inserter:
       logging.info("Order items of '{order_id}' have been acquired. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
       return order_items
   
-  def _get_order_finances(self, order_id: str, marketplace=Marketplaces.US) -> dict[str, Any]:
+  def _get_order_finances(self, order_id: str, marketplace=Marketplaces.US) -> dict[str, Any]: # type: ignore
     logging.info("Getting finances of order '{order_id}' via api. {debug_info}".format(order_id=order_id, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     try:
       order_finances = self.api.get_payload(Finances, marketplace, "get_financial_events_for_order", "FinancialEvents", reqkwargs={"order_id": order_id})
@@ -121,7 +122,7 @@ class Inserter:
     copy.update({key: self._str_to_date(copy.get(key)) for key in [OrderKey.EarliestDeliveryDate, OrderKey.LatestDeliveryDate, OrderKey.EarliestShipDate, OrderKey.LatestShipDate, OrderKey.LastUpdateDate, OrderKey.PurchaseDate]})
     return {OrderKey._id: copy.pop("AmazonOrderId")} | copy | {OrderKey.UpdatedAt: datetime.today().astimezone()}
   
-  def __order_items_to_json(self, order_items: dict[str, Any]) -> dict[str, Any]:
+  def __order_items_to_json(self, order_items: dict[str, Any]) -> list[dict[str, Any]]:
     copy = order_items.copy()
     return [{OItemKey._id: order_item.pop("OrderItemId")} | {OItemKey.Order_id: copy["AmazonOrderId"]} | order_item | {OItemKey.UpdatedAt: datetime.today().astimezone()} for order_item in copy["OrderItems"]]
   
@@ -146,7 +147,7 @@ class Inserter:
     else:
       logging.info("Weekly top 1 million keywords from path '{path}' have been inserted into collection 'WeeklyTopKeywords'. {debug_info}".format(path=path, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
   
-  def _get_top_keywords(self, path) -> list[dict[str, str|int|float]]:
+  def _get_top_keywords(self, path) -> list[dict[str, Any]]:
     logging.info("Getting weekly top 1 million keywords. {debug_info}".format(debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
     keys = [
       "Department", "SearchTerm", "SearchFrequencyRank",
@@ -161,12 +162,12 @@ class Inserter:
       if match_object:
         start_date, end_date = match_object.group(1).split(" - ")
       else:
-        logging.fatal("Unable to find date in string {string}. {debug_info}".format(string=date_str, debug_info=self.__debug_information))
+        logging.fatal("Unable to find date in string {string}. {debug_info}".format(string=date_str, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
         raise Exception(f"Unable to find date in file {date_str}")
       start_date, end_date = tuple(map(lambda x: datetime.strptime(x, "%m/%d/%y").astimezone(timezone.utc) + timedelta(hours=3), (start_date, end_date)))
       return (start_date, end_date) 
-    def process_row(row: list[str], date: datetime) -> dict[str, str]:
-      row_dict = dict(zip(keys, row))
+    def process_row(row: list[str], date: datetime) -> dict[str, Any]:
+      row_dict: dict[str, Any] = dict(zip(keys, row))
       row_dict["SearchFrequencyRank"] = row_dict["SearchFrequencyRank"].replace(",", "")
       row_dict["SearchFrequencyRank"] = int(row_dict["SearchFrequencyRank"])
       for key in share_keys:
@@ -192,11 +193,12 @@ class Inserter:
   
   def insert_many(self, collection_name: str, documents: list[dict[str, Any]]) -> None:
     try:
-      self.client.Amazon[collection_name].insert_many(documents)
+      with self.client("mongodb://localhost:27017") as client:
+        client.Amazon[collection_name].insert_many(documents)
     except Exception:
       logging.critical("Error occurred while inserting data into collection '{collection}'!".format(collection=collection_name), exc_info=True)
     else:
-      logging.info("The data has been inserted into collection '{collection}'. {DebugInfo}".format(collection=collection_name, DebugInfo=self.__debug_information))
+      logging.info("The data has been inserted into collection '{collection}'. {debug_info}".format(collection=collection_name, debug_info={"ObjectID": id(self), "Childs": {"AmazonApiManagerID": id(self.api)}}))
   
   def insert_or_update_one(self, collection_name: str, document: dict[str, Any], key: str) -> None:
     with self.client("mongodb://localhost:27017") as client:
@@ -219,7 +221,7 @@ class Inserter:
 class Puller:
   # debug_info={"ObjectID": id(self)}
   __slots__ = ("client", )
-  def __init__(self, client: pymongo.MongoClient) -> None:
+  def __init__(self, client: type[pymongo.MongoClient]) -> None:
     self.client = client
     logging.debug("Puller object has been created and initialized. {debug_info}".format(debug_info={"ObjectID": id(self)}))
   
@@ -230,15 +232,54 @@ class Puller:
         yield i
   
   def get_product_options(self) -> list[dict[str, str]]:
-    products = pd.DataFrame(self._get("Products", ["_id", "Name"]))
+    products = pd.DataFrame(self._get("Products", ["SKU", "Name"]))
     products = products.groupby("Name").agg(lambda x: list(x))
-    options = products.to_dict()["_id"]
-    return [{"label": name, "value": json.dumps(ASINs)} for name, ASINs in options.items()]
+    options = products.to_dict()["SKU"]
+    return [{"label": name, "value": json.dumps(SKUs)} for name, SKUs in options.items()]
+  
+  def get_product_sales(self, SKUs: list[str]):
+    order_events = list(self.__get_product_sales(SKUs))
+    with mp.Pool(2) as pool:
+      orders, refunds = pool.starmap(self._flatten_order_events_dict, ((order_events, "Order"), (order_events, "Refund")))
+    
+    return pd.DataFrame(orders + refunds)
+  
+  def __get_product_sales(self, SKUs: list[str]) -> Generator[dict[str, Any], None, None]:
+    return self._get(
+      collection_name="Finances",
+      fields=[
+        "ShipmentEventList.MarketplaceName",
+        "ShipmentEventList.PostedDate",
+        "ShipmentEventList.ShipmentItemList.QuantityShipped",
+        "ShipmentEventList.ShipmentItemList.SellerSKU",
+        "RefundEventList.MarketplaceName",
+        "RefundEventList.PostedDate",
+        "RefundEventList.ShipmentItemAdjustmentList.QuantityShipped",
+        "RefundEventList.ShipmentItemAdjustmentList.SellerSKU"
+      ],
+      filters={
+        "$and": [
+          {"$or": [{"ShipmentEventList.ShipmentItemList.SellerSKU": SKU} for SKU in SKUs] + [{"RefundEventList.ShipmentItemAdjustmentList.SellerSKU": SKU} for SKU in SKUs]},
+          {"$or": [
+            {"ShipmentEventList.ShipmentItemList.QuantityShipped": {"$gte": 1}},
+            {"RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": {"$gte": 1}}
+          ]}
+        ]
+      }
+    )
+  
+  @staticmethod
+  def _flatten_order_events_dict(order_events: Generator[dict[str, Any], None, None], type: Literal["Order", "Refund"]) -> list[dict[str, Any]]:
+    if type == "Order":
+      return [{"Order_id": order["_id"], "MarketplaceName": ship["MarketplaceName"], "PostedDate": ship["PostedDate"], "SKU": item["SellerSKU"], "ShipmentType": "Order", "QuantityShipped": item["QuantityShipped"]} for order in order_events for ship in order["ShipmentEventList"] for item in ship["ShipmentItemList"]]
+    else:
+      return [{"Order_id": order["_id"], "MarketplaceName": refund["MarketplaceName"], "PostedDate": refund["PostedDate"], "SKU": item["SellerSKU"], "ShipmentType": "Refund", "QuantityShipped": item["QuantityShipped"]} for order in order_events if order.get("RefundEventList") is not None for refund in order["RefundEventList"] for item in refund["ShipmentItemAdjustmentList"]]
 
 if __name__ == "__main__":
   import time
   import pandas as pd
   from pprint import pprint
   db = DBManager()
-  #path = os.path.abspath(r"C:\Users\salih\Desktop\Downloaded Documents\Amazon Search Terms_Search Terms_US.csv")
-  db.inserter.update_orders("2023-03-01", Marketplaces.CA)
+  #data = db.puller.get_product_options()
+  data = db.puller.get_product_sales(["D20501209 -1", "D20501209 -2", "D20501209 -3", "D20501209 -4", "D20501209 -5", "D20501209 -7", "D20501209 -8", "D20501209 -9", "D20501209 -10", "D20501209 -11", "D20501209 -12"])
+  pprint(data)
