@@ -26,9 +26,10 @@ from concurrent.futures import ThreadPoolExecutor
 from sp_api.base import Marketplaces
 from sp_api.api import Orders, Finances
 
-from .amazon.api import AmazonApiManager
-from .utils.constant import OrderKey, OItemKey, OFinancesKey
-from .utils.dtypeFixer import fix_dtype_cython # type: ignore
+from amazon.api import AmazonApiManager
+from utils.constant import OrderKey, OItemKey, OFinancesKey
+from utils.funcs import flatten_dict
+from utils.dtypeFixer import fix_dtype_cython # type: ignore
 
 # ----- Singleton Database Manager -----
 class DBManager:
@@ -241,39 +242,56 @@ class Puller:
     order_events = list(self.__get_product_sales(SKUs))
     with mp.Pool(2) as pool:
       orders, refunds = pool.starmap(self._flatten_order_events_dict, ((order_events, "Order"), (order_events, "Refund")))
-    
     return orders + refunds
   
   def __get_product_sales(self, SKUs: list[str]) -> Generator[dict[str, Any], None, None]:
-    return self._get(
-      collection_name="Finances",
-      fields=[
-        "ShipmentEventList.MarketplaceName",
-        "ShipmentEventList.PostedDate",
-        "ShipmentEventList.ShipmentItemList.QuantityShipped",
-        "ShipmentEventList.ShipmentItemList.SellerSKU",
-        "RefundEventList.MarketplaceName",
-        "RefundEventList.PostedDate",
-        "RefundEventList.ShipmentItemAdjustmentList.QuantityShipped",
-        "RefundEventList.ShipmentItemAdjustmentList.SellerSKU"
-      ],
-      filters={
-        "$and": [
-          {"$or": [{"ShipmentEventList.ShipmentItemList.SellerSKU": SKU} for SKU in SKUs] + [{"RefundEventList.ShipmentItemAdjustmentList.SellerSKU": SKU} for SKU in SKUs]},
-          {"$or": [
-            {"ShipmentEventList.ShipmentItemList.QuantityShipped": {"$gte": 1}},
-            {"RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": {"$gte": 1}}
-          ]}
-        ]
-      }
-    )
+    with self.client("mongodb://localhost:27017") as client:
+      cursor = client.Amazon.Finances.aggregate([
+        {
+          "$lookup": {
+            "from": "Products",
+            "localField": "ShipmentEventList.ShipmentItemList.SellerSKU",
+            "foreignField": "SKU",
+            "as": "Products"
+          }
+        },
+        {
+          "$unwind": "$Products"
+        },
+        {
+          "$match": {
+            "$and": [
+              {"$or": [{"ShipmentEventList.ShipmentItemList.SellerSKU": SKU} for SKU in SKUs] + [{"RefundEventList.ShipmentItemAdjustmentList.SellerSKU": SKU} for SKU in SKUs]},
+              {"$or": [
+                {"ShipmentEventList.ShipmentItemList.QuantityShipped": {"$gte": 1}},
+                {"RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": {"$gte": 1}}
+              ]}
+            ]
+          }
+        },
+        {
+          "$project": {
+            "ShipmentEventList.MarketplaceName": 1,
+            "ShipmentEventList.PostedDate": 1,
+            "ShipmentEventList.ShipmentItemList.QuantityShipped": 1,
+            "ShipmentEventList.ShipmentItemList.SellerSKU": 1,
+            "RefundEventList.MarketplaceName": 1,
+            "RefundEventList.PostedDate": 1,
+            "RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": 1,
+            "RefundEventList.ShipmentItemAdjustmentList.SellerSKU": 1,
+            "Products.Variant": 1
+          }
+        }
+      ])
+      for i in cursor:
+        yield i
   
   @staticmethod
   def _flatten_order_events_dict(order_events: Generator[dict[str, Any], None, None], type: Literal["Order", "Refund"]) -> list[dict[str, Any]]:
     if type == "Order":
-      return [{"Order_id": order["_id"], "MarketplaceName": ship["MarketplaceName"], "PostedDate": ship["PostedDate"], "SKU": item["SellerSKU"], "ShipmentType": "Order", "QuantityShipped": item["QuantityShipped"]} for order in order_events for ship in order["ShipmentEventList"] for item in ship["ShipmentItemList"]]
+      return list(map(flatten_dict, ({"Order_id": order["_id"], "MarketplaceName": ship["MarketplaceName"], "PostedDate": ship["PostedDate"], "SKU": item["SellerSKU"], "Variant": order["Products"].get("Variant"), "ShipmentType": "Order", "QuantityShipped": item["QuantityShipped"]} for order in order_events for ship in order["ShipmentEventList"] for item in ship["ShipmentItemList"])))
     else:
-      return [{"Order_id": order["_id"], "MarketplaceName": refund["MarketplaceName"], "PostedDate": refund["PostedDate"], "SKU": item["SellerSKU"], "ShipmentType": "Refund", "QuantityShipped": item["QuantityShipped"]} for order in order_events if order.get("RefundEventList") is not None for refund in order["RefundEventList"] for item in refund["ShipmentItemAdjustmentList"]]
+      return list(map(flatten_dict, ({"Order_id": order["_id"], "MarketplaceName": refund["MarketplaceName"], "PostedDate": refund["PostedDate"], "SKU": item["SellerSKU"], "Variant": order["Products"].get("Variant"), "ShipmentType": "Refund", "QuantityShipped": item["QuantityShipped"]} for order in order_events if order.get("RefundEventList") is not None for refund in order["RefundEventList"] for item in refund["ShipmentItemAdjustmentList"])))
 
 if __name__ == "__main__":
   import time
@@ -282,4 +300,4 @@ if __name__ == "__main__":
   db = DBManager()
   #data = db.puller.get_product_options()
   data = db.puller.get_product_sales(["D20501209 -1", "D20501209 -2", "D20501209 -3", "D20501209 -4", "D20501209 -5", "D20501209 -7", "D20501209 -8", "D20501209 -9", "D20501209 -10", "D20501209 -11", "D20501209 -12"])
-  pprint(data)
+  pprint(data[-1])
