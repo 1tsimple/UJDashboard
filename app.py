@@ -45,12 +45,12 @@ from database.dBManager import DBManager
 
 db = DBManager()
 
-@app.callback(
+"""@app.callback(
   Output({"type": "product-filter", "uuid": ALL}, "options"),
   Input("refresh-dropdown-options", "n_intervals")
 )
 def refresh_product_options(interval):
-  return [db.puller.get_product_options() for _ in range(len(ctx.outputs_list))]
+  return [db.puller.get_product_options() for _ in range(len(ctx.outputs_list))]"""
 
 @app.callback(
   Output({"type": "graph-data-storage", "uuid": MATCH}, "data"),
