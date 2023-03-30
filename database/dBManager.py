@@ -242,7 +242,7 @@ class Puller:
     with mp.Pool(2) as pool:
       orders, refunds = pool.starmap(self._flatten_order_events_dict, ((order_events, "Order"), (order_events, "Refund")))
     
-    return pd.DataFrame(orders + refunds)
+    return orders + refunds
   
   def __get_product_sales(self, SKUs: list[str]) -> Generator[dict[str, Any], None, None]:
     return self._get(

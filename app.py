@@ -14,7 +14,7 @@ logging.basicConfig(
 
 import dash
 import dash_bootstrap_components as dbc
-#from dash_extensions.enrich import Trigger
+import json
 from dash import html, dcc, Input, Output, State, ALL, MATCH, ctx
 
 from components.header import get_header
@@ -57,9 +57,8 @@ def refresh_product_options(interval):
   Input({"type": "product-filter", "uuid": MATCH}, "value"),
   prevent_initial_call=True
 )
-def get_product_SKUs(value):
-  print(value)
-  return None
+def get_product_SKUs(SKUs):
+  return db.puller.get_product_sales(json.loads(SKUs))
 
 if __name__ == "__main__":
   app.run(debug=True)
