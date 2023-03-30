@@ -8,7 +8,7 @@ from database.dBManager import DBManager
 db = DBManager()
 
 def get_graph(uuid: uuid.UUID):
-  uuid = str(uuid) # type: ignore
+  uuid = str(uuid)
   return html.Div(className="graph-container-outer", children=[
     html.Div(className="close-button-wrapper", children=[
       html.Button(id={"type": "graph-close-button", "uuid": uuid}, className="graph-close-button", children=[
@@ -35,8 +35,13 @@ def get_graph(uuid: uuid.UUID):
               id={"type": "marketplace-filter", "uuid": uuid},
               placeholder="Select marketplaces",
               clearable=False,
-              multi=True,
-              options=["1", "2"]
+              multi=True
+            ),
+            dcc.Dropdown(
+              id={"type": "listing-filter", "uuid": uuid},
+              placeholder="Select SKUs",
+              clearable=False,
+              multi=True
             ),
             dcc.Dropdown(
               id={"type": "variant-filter", "uuid": uuid},
@@ -58,6 +63,7 @@ def get_graph(uuid: uuid.UUID):
           options=[
             {"label": "None", "value": None},
             {"label": "Marketplace", "value": "value1", "disabled": True},
+            {"label": "Listing", "value": "value2", "disabled": True},
             {"label": "Variant", "value": "value3", "disabled": True},
           ],
           label_checked_style={"color": "#0d6efd"},
@@ -80,6 +86,5 @@ def get_graph(uuid: uuid.UUID):
     ]),
     html.Div(className="date-slider-container", children=[
       #dcc.Slider()
-    ]),
-    dcc.Store(id={"type": "graph-data-storage", "uuid": uuid}, modified_timestamp=-1)
+    ])
   ])
