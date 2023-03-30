@@ -12,7 +12,6 @@ body {
 }
 
 #homepage-container {
-  padding-top: 5px;
   width: 100%;
   height: auto;
 }
@@ -23,8 +22,11 @@ body {
 }
 
 #all-graphs-container {
+  margin-top: 10px;
   display: inline-block;
+  background-color: white;
   width: 100%;
+  box-shadow: 0px 0px 12px 4px rgba(0, 0, 0, 0.03);
 }
 
 #add-button-wrapper {
