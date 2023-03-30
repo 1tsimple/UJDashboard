@@ -57,8 +57,20 @@ def refresh_product_options(interval):
   Input({"type": "product-filter", "uuid": MATCH}, "value"),
   prevent_initial_call=True
 )
-def get_product_SKUs(SKUs):
+def get_product_sales(SKUs: str):
   return db.puller.get_product_sales(json.loads(SKUs))
 
+@app.callback(
+  Output({"type": "marketplace-filter", "uuid": MATCH}, "options"),
+  Output({"type": "variant-filter", "uuid": MATCH}, "options"),
+  Output({"type": "groupby-filter", "uuid": MATCH}, "options"),
+  Output({"type": "marketplace-filter", "uuid": MATCH}, "value"),
+  Output({"type": "variant-filter", "uuid": MATCH}, "value"),
+  Input({"type": "graph-data-storage", "uuid": MATCH}, "data"),
+  prevent_initial_call=True
+)
+def update_product_filters_options(data: list[dict[str, str]]):
+  return get_product_filters_options(data)
+
 if __name__ == "__main__":
-  app.run(debug=True)
+  app.run(host="0.0.0.0", debug=True)

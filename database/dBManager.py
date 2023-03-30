@@ -26,10 +26,10 @@ from concurrent.futures import ThreadPoolExecutor
 from sp_api.base import Marketplaces
 from sp_api.api import Orders, Finances
 
-from amazon.api import AmazonApiManager
-from utils.constant import OrderKey, OItemKey, OFinancesKey
-from utils.funcs import flatten_dict
-from utils.dtypeFixer import fix_dtype_cython # type: ignore
+from .amazon.api import AmazonApiManager
+from .utils.constant import OrderKey, OItemKey, OFinancesKey
+from .utils.funcs import flatten_dict
+from .utils.dtypeFixer import fix_dtype_cython # type: ignore
 
 # ----- Singleton Database Manager -----
 class DBManager:
