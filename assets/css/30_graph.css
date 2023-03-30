@@ -103,8 +103,8 @@
   display: block;
   visibility: visible;
   position: absolute;
-  width: 200%;
-  left: -50%;
+  width: 150%;
+  left: -25%;
   background-color: white;
   border: 1px solid var(--bg-grey);
   border-radius: 4px;
@@ -119,7 +119,7 @@
 }
 
 .filter-dropdowns-wrapper > div {
-  width: 32%;
+  width: 48%;
 }
 
 .filter-dropdowns-wrapper > div .Select-placeholder {

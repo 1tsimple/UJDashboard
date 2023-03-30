@@ -13,7 +13,7 @@ class FilterState(Enum):
 
 def toggle_filter(style: dict[str, str]):
   style_copy = style.copy()
-  if ctx.triggered_id["type"] == "filter-apply-button":
+  if ctx.triggered_id == "filter-apply-button":
     style_copy["overflow"] = "hidden"
     filter_style = FilterState.HIDDEN.value
   elif style_copy["overflow"] == "hidden":
