@@ -227,10 +227,17 @@ class Puller:
     logging.debug("Puller object has been created and initialized. {debug_info}".format(debug_info={"ObjectID": id(self)}))
   
   def _get(self, collection_name: str, fields: list[str]=[], filters: dict[str, Any]={}) -> Generator[dict[str, Any], None, None]:
-    with self.client("mongodb://localhost:27017") as client:
-      cursor = client.Amazon[collection_name].find(filters, {field: 1 for field in fields})
-      for i in cursor:
-        yield i
+    logging.info("Getting data from collection '{collection}'... {debug_info}".format(collection=collection_name, debug_info={"Fields": fields, "filters": filters, "ObjectID": id(self)}))
+    try:
+      with self.client("mongodb://localhost:27017") as client:
+        cursor = client.Amazon[collection_name].find(filters, {field: 1 for field in fields})
+        for i in cursor:
+          yield i
+    except Exception as e:
+      logging.error("Failed to get data from collection '{collection}'. {debug_info}".format(collection=collection_name, debug_info={"Fields": fields, "filters": filters, "ObjectID": id(self)}), exc_info=True)
+      raise e
+    else:
+      logging.info("Data pulled from collection '{collection}'. {debug_info}".format(collection=collection_name, debug_info={"Fields": fields, "filters": filters, "ObjectID": id(self)}))
   
   def get_product_options(self) -> list[dict[str, str]]:
     products = pd.DataFrame(self._get("Products", ["SKU", "Name"]))
@@ -245,46 +252,53 @@ class Puller:
     return orders + refunds
   
   def __get_product_sales(self, SKUs: list[str]) -> Generator[dict[str, Any], None, None]:
-    with self.client("mongodb://localhost:27017") as client:
-      cursor = client.Amazon.Finances.aggregate([
-        {
-          "$lookup": {
-            "from": "Products",
-            "localField": "ShipmentEventList.ShipmentItemList.SellerSKU",
-            "foreignField": "SKU",
-            "as": "Products"
+    logging.info("Getting product sales data of '{SKUs}' from database. {debug_info}".format(SKUs=SKUs, debug_info={"ObjectID": id(self)}))
+    try:
+      with self.client("mongodb://localhost:27017") as client:
+        cursor = client.Amazon.Finances.aggregate([
+          {
+            "$lookup": {
+              "from": "Products",
+              "localField": "ShipmentEventList.ShipmentItemList.SellerSKU",
+              "foreignField": "SKU",
+              "as": "Products"
+            }
+          },
+          {
+            "$unwind": "$Products"
+          },
+          {
+            "$match": {
+              "$and": [
+                {"$or": [{"ShipmentEventList.ShipmentItemList.SellerSKU": SKU} for SKU in SKUs] + [{"RefundEventList.ShipmentItemAdjustmentList.SellerSKU": SKU} for SKU in SKUs]},
+                {"$or": [
+                  {"ShipmentEventList.ShipmentItemList.QuantityShipped": {"$gte": 1}},
+                  {"RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": {"$gte": 1}}
+                ]}
+              ]
+            }
+          },
+          {
+            "$project": {
+              "ShipmentEventList.MarketplaceName": 1,
+              "ShipmentEventList.PostedDate": 1,
+              "ShipmentEventList.ShipmentItemList.QuantityShipped": 1,
+              "ShipmentEventList.ShipmentItemList.SellerSKU": 1,
+              "RefundEventList.MarketplaceName": 1,
+              "RefundEventList.PostedDate": 1,
+              "RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": 1,
+              "RefundEventList.ShipmentItemAdjustmentList.SellerSKU": 1,
+              "Products.Variant": 1
+            }
           }
-        },
-        {
-          "$unwind": "$Products"
-        },
-        {
-          "$match": {
-            "$and": [
-              {"$or": [{"ShipmentEventList.ShipmentItemList.SellerSKU": SKU} for SKU in SKUs] + [{"RefundEventList.ShipmentItemAdjustmentList.SellerSKU": SKU} for SKU in SKUs]},
-              {"$or": [
-                {"ShipmentEventList.ShipmentItemList.QuantityShipped": {"$gte": 1}},
-                {"RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": {"$gte": 1}}
-              ]}
-            ]
-          }
-        },
-        {
-          "$project": {
-            "ShipmentEventList.MarketplaceName": 1,
-            "ShipmentEventList.PostedDate": 1,
-            "ShipmentEventList.ShipmentItemList.QuantityShipped": 1,
-            "ShipmentEventList.ShipmentItemList.SellerSKU": 1,
-            "RefundEventList.MarketplaceName": 1,
-            "RefundEventList.PostedDate": 1,
-            "RefundEventList.ShipmentItemAdjustmentList.QuantityShipped": 1,
-            "RefundEventList.ShipmentItemAdjustmentList.SellerSKU": 1,
-            "Products.Variant": 1
-          }
-        }
-      ])
-      for i in cursor:
-        yield i
+        ])
+        for i in cursor:
+          yield i
+    except Exception as e:
+      logging.error("Failed to get data from database. {debug_info}".format(debug_info={"ObjectID": id(self)}), exc_info=True)
+      raise e
+    else:
+      logging.info("Product sales data of '{SKUs}' has been pulled from database. {debug_info}".format(SKUs=SKUs, debug_info={"ObjectID": id(self)}))
   
   @staticmethod
   def _flatten_order_events_dict(order_events: Generator[dict[str, Any], None, None], type: Literal["Order", "Refund"]) -> list[dict[str, Any]]:
