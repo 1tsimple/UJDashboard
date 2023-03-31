@@ -23,18 +23,19 @@ Marketplace = {
 }
 
 class CallbackManager():
+  __slots__ = "app", "db"
   def __init__(self, app: dash.Dash) -> None:
     self.app = app
     self.db = DBManager()
   
-  def init_callbacks(self):
+  def init_callbacks(self) -> None:
     #self.refresh_product_filter() # currently bugged due to pattern-matching update bug in dash
     self.toggle_filter()
     self.get_product_sales()
     self.update_product_filters_options()
     self.update_graphs()
   
-  def refresh_product_filter(self):
+  def refresh_product_filter(self) -> None:
     @self.app.callback(
       Output({"type": "product-filter", "uuid": ALL}, "options"),
       Input("refresh-dropdown-options", "n_intervals")
@@ -42,7 +43,7 @@ class CallbackManager():
     def callback(interval):
       return [self.db.puller.get_product_options() for _ in range(len(ctx.outputs_list))]
   
-  def toggle_filter(self):
+  def toggle_filter(self) -> None:
     @self.app.callback(
       Output({"type": "filter", "uuid": MATCH}, "style"),
       Output({"type": "filter-button", "uuid": MATCH}, "style"),
@@ -63,7 +64,7 @@ class CallbackManager():
         filter_style = FilterState.HIDDEN.value
       return style, filter_style
   
-  def get_product_sales(self):
+  def get_product_sales(self) -> None:
     @self.app.callback(
       Output({"type": "graph-data-storage", "uuid": MATCH}, "data"),
       Input({"type": "product-filter", "uuid": MATCH}, "value"),
@@ -72,7 +73,7 @@ class CallbackManager():
     def callback(SKUs: str):
       return self.db.puller.get_product_sales(json.loads(SKUs))
   
-  def update_product_filters_options(self):
+  def update_product_filters_options(self) -> None:
     @self.app.callback(
       Output({"type": "marketplace-filter", "uuid": MATCH}, "options"),
       Output({"type": "variant-filter", "uuid": MATCH}, "options"),
@@ -106,7 +107,7 @@ class CallbackManager():
         unique_dict[key].add(value)
     return unique_dict
   
-  def update_graphs(self):
+  def update_graphs(self) -> None:
     @self.app.callback(
       Output({"type": "main-graph", "uuid": MATCH}, "figure"),
       Input({"type": "filter-apply-button", "uuid": MATCH}, "n_clicks"),
