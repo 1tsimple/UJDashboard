@@ -247,8 +247,8 @@ class Puller:
   
   def get_product_sales(self, SKUs: list[str]):
     order_events = list(self.__get_product_sales(SKUs))
-    with mp.Pool(2) as pool:
-      orders, refunds = pool.starmap(self._flatten_order_events_dict, ((order_events, "Order"), (order_events, "Refund")))
+    orders = self._flatten_order_events_dict(order_events, "Order")
+    refunds = self._flatten_order_events_dict(order_events, "Refund")
     return orders + refunds
   
   def __get_product_sales(self, SKUs: list[str]) -> Generator[dict[str, Any], None, None]:
@@ -301,7 +301,7 @@ class Puller:
       logging.info("Product sales data of '{SKUs}' has been pulled from database. {debug_info}".format(SKUs=SKUs, debug_info={"ObjectID": id(self)}))
   
   @staticmethod
-  def _flatten_order_events_dict(order_events: Generator[dict[str, Any], None, None], type: Literal["Order", "Refund"]) -> list[dict[str, Any]]:
+  def _flatten_order_events_dict(order_events: list[dict[str, Any]], type: Literal["Order", "Refund"]) -> list[dict[str, Any]]:
     if type == "Order":
       return list(map(flatten_dict, ({"Order_id": order["_id"], "MarketplaceName": ship["MarketplaceName"], "PostedDate": ship["PostedDate"], "SKU": item["SellerSKU"], "Variant": order["Products"].get("Variant"), "ShipmentType": "Order", "QuantityShipped": item["QuantityShipped"]} for order in order_events for ship in order["ShipmentEventList"] for item in ship["ShipmentItemList"])))
     else:
@@ -313,5 +313,6 @@ if __name__ == "__main__":
   from pprint import pprint
   db = DBManager()
   #data = db.puller.get_product_options()
+  start = time.perf_counter()
   data = db.puller.get_product_sales(["D20501209 -1", "D20501209 -2", "D20501209 -3", "D20501209 -4", "D20501209 -5", "D20501209 -7", "D20501209 -8", "D20501209 -9", "D20501209 -10", "D20501209 -11", "D20501209 -12"])
-  pprint(data[-1])
+  print(time.perf_counter() - start)
