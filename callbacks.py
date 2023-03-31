@@ -44,7 +44,7 @@ def get_product_filters_options(data: list[dict[str, str]]):
     groupby_options[2] = {"label": "Variant", "value": "Variant"}
   def get_values(option_list: list[dict[str, str]]) -> list[str]:
     return [value for option in option_list for key, value in option.items()]
-  return marketplace_options, variant_options, groupby_options, get_values(marketplace_options), get_values(variant_options)
+  return marketplace_options, variant_options, groupby_options, get_values(marketplace_options), get_values(variant_options), None
 
 def get_unique_values_in_dict(dict_list: list[dict[Any, Any]]) -> defaultdict[Any, set[Any]]:
   unique_dict = defaultdict(set)

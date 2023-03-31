@@ -66,6 +66,7 @@ def get_product_sales(SKUs: str):
   Output({"type": "groupby-filter", "uuid": MATCH}, "options"),
   Output({"type": "marketplace-filter", "uuid": MATCH}, "value"),
   Output({"type": "variant-filter", "uuid": MATCH}, "value"),
+  Output({"type": "groupby-filter", "uuid": MATCH}, "value"),
   Input({"type": "graph-data-storage", "uuid": MATCH}, "data"),
   prevent_initial_call=True
 )
