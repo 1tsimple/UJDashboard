@@ -31,19 +31,22 @@ def get_graph(uuid: uuid.UUID):
         ]),
         html.Div(id={"type": "filter-expand", "uuid": uuid}, className="filter-expand", children=[
           html.Div(className="filter-dropdowns-wrapper", children=[
-            dcc.Dropdown(
-              id={"type": "marketplace-filter", "uuid": uuid},
-              placeholder="Select marketplaces",
-              clearable=False,
-              multi=True,
-              options=["1", "2"]
-            ),
-            dcc.Dropdown(
-              id={"type": "variant-filter", "uuid": uuid},
-              placeholder="Select variants",
-              clearable=False,
-              multi=True
-            )
+            dcc.Loading(id={"type": "marketplace-loading", "uuid": uuid}, type="dot", children=[
+              dcc.Dropdown(
+                id={"type": "marketplace-filter", "uuid": uuid},
+                placeholder="Select marketplaces",
+                clearable=False,
+                multi=True,
+              )
+            ]),
+            dcc.Loading(id={"type": "variant-loading", "uuid": uuid}, type="dot", children=[
+              dcc.Dropdown(
+                id={"type": "variant-filter", "uuid": uuid},
+                placeholder="Select variants",
+                clearable=False,
+                multi=True
+              )
+            ])
           ]),
           html.Button(id={"type": "filter-apply-button", "uuid": uuid}, className="filter-apply-button", n_clicks=0, children=[
             html.Span(children="Apply")
@@ -52,24 +55,26 @@ def get_graph(uuid: uuid.UUID):
       ]),
       html.Div(className="groupby-filter-wrapper", children=[
         html.Span(children="Group By"),
-        dbc.RadioItems(
-          id={"type": "groupby-filter", "uuid": uuid},
-          className="groupby-filter",
-          options=[
-            {"label": "None", "value": None},
-            {"label": "Marketplace", "value": "value1", "disabled": True},
-            {"label": "Variant", "value": "value3", "disabled": True},
-          ],
-          label_checked_style={"color": "#0d6efd"},
-          value=None
-        )
+        dcc.Loading(id={"type": "radio-items-loading", "uuid": uuid}, type="dot", style={"position": "absolute", "top": "calc(100% + 4px)"}, children=[
+          dbc.RadioItems(
+            id={"type": "groupby-filter", "uuid": uuid},
+            className="groupby-filter",
+            options=[
+              {"label": "None", "value": None},
+              {"label": "Marketplace", "value": "value1", "disabled": True},
+              {"label": "Variant", "value": "value3", "disabled": True},
+            ],
+            label_checked_style={"color": "#0d6efd"},
+            value=None
+          )
+        ]),
       ])
     ]),
     html.Div(className="graph-container-inner", children=[
       html.Div(className="graph-container", children=[
-        dcc.Loading(className="graph-loading", children=[
+        dcc.Loading(type="graph", className="graph-loading", children=[
           dcc.Graph(
-            id={"uuid": uuid},
+            id={"type": "main-graph", "uuid": uuid},
             figure={}
           )
         ])

@@ -103,8 +103,8 @@
   display: block;
   visibility: visible;
   position: absolute;
-  width: 150%;
-  left: -25%;
+  width: 180%;
+  left: -40%;
   background-color: white;
   border: 1px solid var(--bg-grey);
   border-radius: 4px;
@@ -124,6 +124,17 @@
 
 .filter-dropdowns-wrapper > div .Select-placeholder {
   font-size: 12px;
+}
+
+.filter-dropdowns-wrapper > div .Select-menu-outer {
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+.filter-dropdowns-wrapper > div .Select-value-label {
+  font-family: sans-serif;
+  font-size: 12px;
+  padding: 3px 5px 2px 5px;
 }
 
 .filter-apply-button {
@@ -165,6 +176,13 @@
   text-transform: uppercase;
 }
 
+.groupby-filter-wrapper > div > div:last-child {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 26px;
+}
+
 .groupby-filter {
   width: 100%;
   position: absolute;
@@ -189,10 +207,6 @@
 
 .groupby-filter > div:nth-child(3) {
   padding: 2px 38px 2px 0;
-}
-
-.groupby-filter > div:nth-child(4) {
-  padding: 2px 40px 2px 0;
 }
 
 .groupby-filter > div > label {
