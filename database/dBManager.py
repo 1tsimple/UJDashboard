@@ -252,7 +252,7 @@ class Puller:
     return orders + refunds
   
   def __get_product_sales(self, SKUs: list[str]) -> Generator[dict[str, Any], None, None]:
-    logging.info("Getting product sales data of '{SKUs}' from database. {debug_info}".format(SKUs=SKUs, debug_info={"ObjectID": id(self)}))
+    logging.info('Getting product sales data of "{SKUs}" from database. {debug_info}'.format(SKUs=SKUs, debug_info={"ObjectID": id(self)}))
     try:
       with self.client("mongodb://localhost:27017") as client:
         cursor = client.Amazon.Finances.aggregate([
@@ -298,7 +298,7 @@ class Puller:
       logging.error("Failed to get data from database. {debug_info}".format(debug_info={"ObjectID": id(self)}), exc_info=True)
       raise e
     else:
-      logging.info("Product sales data of '{SKUs}' has been pulled from database. {debug_info}".format(SKUs=SKUs, debug_info={"ObjectID": id(self)}))
+      logging.info('Product sales data of "{SKUs}" has been pulled from database. {debug_info}'.format(SKUs=SKUs, debug_info={"ObjectID": id(self)}))
   
   @staticmethod
   def _flatten_order_events_dict(order_events: list[dict[str, Any]], type: Literal["Order", "Refund"]) -> list[dict[str, Any]]:
