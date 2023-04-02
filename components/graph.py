@@ -61,8 +61,8 @@ def get_graph(uuid: uuid.UUID):
             className="groupby-filter",
             options=[
               {"label": "None", "value": None},
-              {"label": "Marketplace", "value": "value1", "disabled": True},
-              {"label": "Variant", "value": "value3", "disabled": True},
+              {"label": "Marketplace", "value": "Marketplace", "disabled": True},
+              {"label": "Variant", "value": "Variant", "disabled": True},
             ],
             label_checked_style={"color": "#0d6efd"},
             value=None
