@@ -176,13 +176,6 @@
   text-transform: uppercase;
 }
 
-.groupby-filter-wrapper > div > div:last-child {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 26px;
-}
-
 .groupby-filter {
   width: 100%;
   position: absolute;
