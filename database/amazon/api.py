@@ -58,7 +58,7 @@ class AmazonApiManager:
       "aws_secret_key": os.environ.get("aws_secret_key"),
       "role_arn": os.environ.get("role_arn"),
       "refresh_token": os.environ.get("refresh_token")
-    }
+    } # type: ignore
   
   def get_report(self):
     raise NotImplementedError()
