@@ -31,7 +31,7 @@ class CallbackManager():
     self.db = DBManager()
   
   def init_callbacks(self) -> None:
-    #self.refresh_product_filter() # currently bugged due to pattern-matching update bug in dash
+    self.refresh_product_filter() # currently bugged due to pattern-matching update bug in dash
     self.toggle_filter()
     self.get_product_sales()
     self.update_product_filters_options()
