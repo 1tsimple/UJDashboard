@@ -3,7 +3,7 @@
   width: 20px;
   height: 20px;
   position: absolute;
-  right: 1px;
+  right: 0;
   top: -5px;
 }
 
@@ -29,13 +29,21 @@
   height: 0;
   position: absolute;
   bottom: 27px;
-  left: 19px;
+  left: 18px;
   transform: rotate(45deg);
   font-size: 20px;
 }
 
 .close-button-text-wrapper:hover span {
   color: var(--bg-red);
+  cursor: default;
+}
+
+.clickable-close-button-dummy {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  opacity: 0;
 }
 /* ---------- GRAPH CLOSE BUTTON END ---------- */
 

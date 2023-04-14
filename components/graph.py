@@ -13,7 +13,8 @@ def get_graph(uuid: uuid.UUID):
     html.Div(className="close-button-wrapper", children=[
       html.Button(id={"type": "graph-close-button", "uuid": uuid}, className="graph-close-button", children=[
         html.Div(className="close-button-text-wrapper", children=[
-          html.Span(children="+")
+          html.Span(children="+"),
+          html.Div(className="clickable-close-button-dummy")
         ])
       ])
     ]),
@@ -84,7 +85,7 @@ def get_graph(uuid: uuid.UUID):
       ])
     ]),
     html.Div(className="date-slider-container", children=[
-      #dcc.Slider()
+      #dcc.RangeSlider()
     ]),
     dcc.Store(id={"type": "graph-data-storage", "uuid": uuid}, modified_timestamp=-1)
   ])
