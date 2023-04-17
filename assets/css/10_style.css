@@ -4,6 +4,17 @@
   --bg-grey: #ccc;
   --bg-blue: #0d6efd;
   --bg-blue-alpha: #0d6efd1a;
+  --text-black: #333;
+}
+
+.btn-outline-grey {
+  --bs-btn-color: var(--bg-grey);
+  --bs-btn-border-color: var(--bg-grey);
+  --bs-btn-hover-color: var(--text-black);
+  --bs-btn-hover-border-color: var(--bg-blue);
+  --bs-btn-active-color: var(--bg-blue);
+  --bs-btn-active-border-color: var(--bg-blue);
+  --bs-gradient: none;
 }
 
 body {

@@ -26,13 +26,31 @@ def get_graph(uuid: uuid.UUID):
         clearable=False,
       ),
       dcc.Interval(id="refresh-dropdown-options", interval=5000, n_intervals=0),
-      html.Div(id={"type": "filter", "uuid": uuid}, className="filter", style={"overflow": "hidden"}, children=[
-        html.Button(id={"type": "filter-button", "uuid": uuid}, className="filter-button", n_clicks=0, children=[
-          html.Span(children="Filter")
-        ]),
-        html.Div(id={"type": "filter-expand", "uuid": uuid}, className="filter-expand", children=[
-          html.Div(className="filter-dropdowns-wrapper", children=[
-            dcc.Loading(id={"type": "marketplace-loading", "uuid": uuid}, type="dot", children=[
+      html.Div(id={"type": "filter", "uuid": uuid}, className="filter", children=[
+        dbc.ButtonGroup(
+          id={"type": "button-group-filter", "uuid": uuid},
+          className="button-group-filter",
+          children=[
+            dbc.Button(
+              className="filter-button",
+              type="button",
+              outline=True,
+              color="grey",
+              children="Filter"
+            ),
+            dbc.Button(
+              id={"type": "filter-apply-button", "uuid": uuid},
+              className="filter-apply-button",
+              type="submit",
+              outline=True,
+              color="grey",
+              children=html.I(className="fa-solid fa-check")
+            ),
+          ]
+        ),
+        dbc.Collapse(className="marketplace-collapse", is_open=True, children=[
+          dbc.Card(children=[
+            dcc.Loading(className="marketplace-loading", type="dot", children=[
               dcc.Dropdown(
                 id={"type": "marketplace-filter", "uuid": uuid},
                 placeholder="Select marketplaces",
@@ -40,7 +58,7 @@ def get_graph(uuid: uuid.UUID):
                 multi=True,
               )
             ]),
-            dcc.Loading(id={"type": "variant-loading", "uuid": uuid}, type="dot", children=[
+            dcc.Loading(className="variant-loading", type="dot", children=[
               dcc.Dropdown(
                 id={"type": "variant-filter", "uuid": uuid},
                 placeholder="Select variants",
@@ -49,9 +67,6 @@ def get_graph(uuid: uuid.UUID):
               )
             ])
           ]),
-          html.Button(id={"type": "filter-apply-button", "uuid": uuid}, className="filter-apply-button", n_clicks=0, children=[
-            html.Span(children="Apply")
-          ])
         ])
       ]),
       html.Div(className="groupby-filter-wrapper", children=[
@@ -65,7 +80,8 @@ def get_graph(uuid: uuid.UUID):
               {"label": "Marketplace", "value": "Marketplace", "disabled": True},
               {"label": "Variant", "value": "Variant", "disabled": True},
             ],
-            label_checked_style={"color": "#0d6efd"},
+            label_checked_style={"color": "var(--bg-blue)"},
+            labelStyle={"color": "var(--text-black)"},
             value=None
           )
         ]),
