@@ -230,6 +230,6 @@
   z-index: 1;
 }
 
-.graph-container > .dash-graph {
-  height: 400px;
+.graph-container .dash-graph {
+  height: 42vh;
 }
