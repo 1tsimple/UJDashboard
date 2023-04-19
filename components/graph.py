@@ -106,8 +106,16 @@ def get_graph(uuid: uuid.UUID):
         
       ])
     ]),
-    html.Div(className="date-slider-container", children=[
-      #dcc.RangeSlider()
+    html.Div(className="date-filter-container", children=[
+      dcc.RangeSlider(
+        id={"type": "date-filter", "uuid": uuid},
+        className="date-filter",
+        min=0,
+        max=1,
+        step=1,
+        pushable=7,
+        allowCross=False
+      )
     ]),
     dcc.Store(id={"type": "graph-data-storage", "uuid": uuid}, modified_timestamp=-1)
   ])
