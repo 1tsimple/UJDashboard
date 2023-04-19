@@ -32,10 +32,9 @@ class CallbackManager():
   
   def init_callbacks(self) -> None:
     self.refresh_product_filter() # currently bugged due to pattern-matching update bug in dash
-    self.toggle_filter()
     self.get_product_sales()
     self.update_product_filters_options()
-    self.update_graphs()
+    #self.update_graphs()
   
   def refresh_product_filter(self) -> None:
     @self.app.callback(
@@ -44,27 +43,6 @@ class CallbackManager():
     )
     def callback(interval):
       return [self.db.puller.get_product_options() for _ in range(len(ctx.outputs_list))]
-  
-  def toggle_filter(self) -> None:
-    @self.app.callback(
-      Output({"type": "filter", "uuid": MATCH}, "style"),
-      Output({"type": "filter-button", "uuid": MATCH}, "style"),
-      Input({"type": "filter-button", "uuid": MATCH}, "n_clicks"),
-      Input({"type": "filter-apply-button", "uuid": MATCH}, "n_clicks"),
-      State({"type": "filter", "uuid": MATCH}, "style"),
-      prevent_initial_call=True
-    )
-    def callback(filter_button_click: int, apply_button_click: int, style: dict[str, str]):
-      if ctx.triggered_id == "filter-apply-button":
-        style["overflow"] = "hidden"
-        filter_style = FilterState.HIDDEN.value
-      elif style["overflow"] == "hidden":
-        style["overflow"] = "visible"
-        filter_style = FilterState.VISIBLE.value
-      else:
-        style["overflow"] = "hidden"
-        filter_style = FilterState.HIDDEN.value
-      return style, filter_style
   
   def get_product_sales(self) -> None:
     @self.app.callback(
