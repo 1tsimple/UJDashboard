@@ -48,22 +48,28 @@ def get_graph(uuid: uuid.UUID):
             ),
           ]
         ),
-        dbc.Collapse(className="marketplace-collapse", is_open=True, children=[
+        dbc.Collapse(className="filter-collapse", is_open=False, children=[
           dbc.Card(children=[
-            dcc.Loading(className="marketplace-loading", type="dot", children=[
-              dcc.Dropdown(
-                id={"type": "marketplace-filter", "uuid": uuid},
-                placeholder="Select marketplaces",
-                clearable=False,
-                multi=True,
-              )
+            html.Div(className="filter-collapse-marketplace", children=[
+              dcc.Loading(className="marketplace-loading", type="dot", children=[
+                dbc.Checklist(
+                  id={"type": "marketplace-filter", "uuid": uuid},
+                  className="marketplace-filter filter-checklist",
+                  #placeholder="Select marketplaces",
+                  #clearable=False,
+                  #multi=True,
+                  inline=True
+                )
+              ]),
             ]),
             dcc.Loading(className="variant-loading", type="dot", children=[
-              dcc.Dropdown(
+              dbc.Checklist(
                 id={"type": "variant-filter", "uuid": uuid},
-                placeholder="Select variants",
-                clearable=False,
-                multi=True
+                className="variant-filter filter-checklist",
+                #placeholder="Select variants",
+                #clearable=False,
+                #multi=True
+                inline=True
               )
             ])
           ]),

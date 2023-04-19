@@ -105,19 +105,37 @@
   font-weight: 400;
   color: var(--bg-grey);
   border-radius: 4px;
-  z-index: 1;
 }
 
 .button-group-filter > button:hover {
   font-weight: 500;
 }
 
-.button-group-filter > .filter-button {
+.button-group-filter .filter-button {
   flex-grow: 1;
 }
 
-.button-group-filter > .filter-apply-button {
+.button-group-filter .filter-apply-button {
   flex-grow: 0;
+}
+
+.filter-collapse {
+  position: absolute;
+  width: 150%;
+  left: -25%;
+  z-index: 1;
+  margin-top: 10px;
+  flex-direction: row;
+}
+
+.filter-collapse .card {
+  flex-direction: row;
+  padding: 10px;
+  justify-content: space-between;
+}
+
+.card > div {
+  width: 49%;
 }
 
       /*.filter-dropdowns-wrapper {
