@@ -50,17 +50,17 @@ class TotalSalesCountGraph(Graph):
     )
   
   def handle_data_process(self, marketplaces: list[str], variants: list[str], groupby: str|None, time_frame: list[str]) -> None:
-    self.filter_dataframe(marketplaces, variants, time_frame)
+    self.filter_dataframe(marketplaces, variants)
     self.df["QuantityShippedTrue"] = self.df.apply(lambda row: self.get_quantity_shipped_true(row), axis=1)
     self.df["PostedDate"] = pd.to_datetime(self.df["PostedDate"].str.split("T", expand=True)[0])
-    self.df = self.df[(self.df["PostedDate"] > time_frame[0]) & (self.df["PostedDate"] < time_frame[-1])]
+    self.df = self.df[(self.df["PostedDate"] > time_frame[0]) & (self.df["PostedDate"] < time_frame[-1])].reset_index(drop=True)
     self.groupby_filter(marketplaces, variants, groupby)
     self.__dfs = list(map(self.fill_spaces_between_dates, self.__dfs))
     for df_ in self.__dfs:
       df_["QuantityShippedTrueCumulative"] = df_["QuantityShippedTrue"].cumsum()
     self.df = pd.concat(self.__dfs)
   
-  def filter_dataframe(self, marketplaces: list[str], variants: list[str], time_frame: list[str]) -> None:
+  def filter_dataframe(self, marketplaces: list[str], variants: list[str]) -> None:
     self.df = self.df[self.df["MarketplaceName"].isin(marketplaces)]
     variant_columns = [column for column in self.df.columns if "Variant." in column]
     for col in variant_columns:
@@ -76,7 +76,7 @@ class TotalSalesCountGraph(Graph):
   
   def groupby_filter(self, marketplaces: list[str], variants: list[str], groupby: str|None):
     if groupby is None:
-      df_ = self.df.copy().groupby(by="PostedDate").agg("sum").reset_index()
+      df_ = self.df.copy().groupby(by="PostedDate").agg("sum", numeric_only=True).reset_index()
       self.__dfs = [df_]
     elif groupby == "Marketplace":
       for marketplace in marketplaces:
@@ -89,12 +89,14 @@ class TotalSalesCountGraph(Graph):
       self.df["Variant.All"] = self.df[variant_columns].agg(" - ".join, axis=1)
       for variant in variants:
         df_ = self.df[self.df["Variant.All"] == variant].copy()
-        df_ = df_.groupby(by="PostedDate").agg("sum").reset_index()
+        df_ = df_.groupby(by="PostedDate").agg("sum", numeric_only=True).reset_index()
         df_["Variant.All"] = variant
         self.__dfs.append(df_)
   
   @staticmethod
   def fill_spaces_between_dates(dataframe: pd.DataFrame):
+    if dataframe.empty:
+      return dataframe
     all_dates = pd.DataFrame(pd.date_range(dataframe["PostedDate"].min(), dataframe["PostedDate"].max()), columns=["PostedDate"])
     all_dates_df = all_dates.merge(right=dataframe, how="left", on="PostedDate")
     all_dates_df[["QuantityShipped", "QuantityShippedTrue"]] = all_dates_df[["QuantityShipped", "QuantityShippedTrue"]].fillna(0.0).astype(int)
