@@ -31,10 +31,10 @@ class CallbackManager():
     self.db = DBManager()
   
   def init_callbacks(self) -> None:
-    self.refresh_product_filter() # currently bugged due to pattern-matching update bug in dash
+    self.refresh_product_filter()
     self.get_product_sales()
     self.update_product_filters_options()
-    #self.update_graphs()
+    self.update_graphs()
   
   def refresh_product_filter(self) -> None:
     @self.app.callback(
@@ -61,6 +61,10 @@ class CallbackManager():
       Output({"type": "marketplace-filter", "uuid": MATCH}, "value"),
       Output({"type": "variant-filter", "uuid": MATCH}, "value"),
       Output({"type": "groupby-filter", "uuid": MATCH}, "value"),
+      Output({"type": "date-filter", "uuid": MATCH}, "max"),
+      Output({"type": "date-filter", "uuid": MATCH}, "value"),
+      Output({"type": "date-filter", "uuid": MATCH}, "marks"),
+      Output({"type": "graph-time-frame-data-storage", "uuid": MATCH}, "data"),
       Input({"type": "graph-data-storage", "uuid": MATCH}, "data"),
       prevent_initial_call=True
     )
@@ -75,9 +79,11 @@ class CallbackManager():
         groupby_options[1] = {"label": "Marketplace", "value": "Marketplace"}
       if len(variant_options) >= 2:
         groupby_options[2] = {"label": "Variant", "value": "Variant"}
-      def get_values(option_list: list[dict[str, str]]) -> list[str]:
-        return [option["value"] for option in option_list]
-      return marketplace_options, variant_options, groupby_options, get_values(marketplace_options), get_values(variant_options), None
+      get_values = lambda option_list: [option["value"] for option in option_list]
+      dates = pd.to_datetime(pd.Series(map(lambda x: x.split("T")[0], unique_dict["PostedDate"])))
+      dates = pd.date_range(dates.min(), dates.max(), name="PostedDate")
+      marks = {index[0]: date.strftime("%B %Y") for index, date, condition in zip(enumerate(dates), dates, dates.is_month_start) if condition}
+      return marketplace_options, variant_options, groupby_options, get_values(marketplace_options), get_values(variant_options), None, len(dates), (0, len(dates)), marks, dates.to_list()
   
   @staticmethod
   def _get_unique_values_in_dict(dict_list: list[dict[Any, Any]]) -> defaultdict[Any, set[Any]]:
@@ -95,9 +101,18 @@ class CallbackManager():
       State({"type": "marketplace-filter", "uuid": MATCH}, "value"),
       State({"type": "variant-filter", "uuid": MATCH}, "value"),
       Input({"type": "groupby-filter", "uuid": MATCH}, "value"),
+      Input({"type": "date-filter", "uuid": MATCH}, "value"),
+      State({"type": "graph-time-frame-data-storage", "uuid": MATCH}, "data"),
       prevent_initial_call=True
     )
-    def callback(data: list[dict[str, Any]], button_click: int, marketplaces: list[str], variants: list[str], groupby: str|None):
+    def callback(data: list[dict[str, Any]], button_click: int, marketplaces: list[str], variants: list[str], groupby: str|None, date_indexes: tuple[int, int], dates: list[str]):
       dataframe = pd.DataFrame(data)
-      graph = GraphFactory().get_graph("total_sales_count", dataframe, marketplaces=marketplaces, variants=variants, groupby=groupby)
+      graph = GraphFactory().get_graph(
+        type_="total_sales_count",
+        dataframe=dataframe,
+        marketplaces=marketplaces,
+        variants=variants,
+        groupby=groupby,
+        time_frame=dates[date_indexes[0]:date_indexes[1]]
+      )
       return graph

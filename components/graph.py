@@ -111,11 +111,14 @@ def get_graph(uuid: uuid.UUID):
         id={"type": "date-filter", "uuid": uuid},
         className="date-filter",
         min=0,
-        max=1,
+        max=7,
+        marks={0: "0", 7: "7"},
         step=1,
         pushable=7,
-        allowCross=False
+        allowCross=False,
+        tooltip={"placement": "bottom", "always_visible": False}
       )
     ]),
-    dcc.Store(id={"type": "graph-data-storage", "uuid": uuid}, modified_timestamp=-1)
+    dcc.Store(id={"type": "graph-data-storage", "uuid": uuid}, modified_timestamp=-1),
+    dcc.Store(id={"type": "graph-time-frame-data-storage", "uuid": uuid}, modified_timestamp=-1),
   ])

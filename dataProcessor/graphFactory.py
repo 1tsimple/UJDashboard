@@ -22,15 +22,16 @@ class TotalSalesCountGraph(Graph):
   def __init__(self, dataframe: pd.DataFrame) -> None:
     self.df = dataframe
     self.__dfs = []
-    self.__required_kwargs = ["marketplaces", "variants", "groupby"]
+    self.__required_kwargs = ["marketplaces", "variants", "groupby", "time_frame"]
   
   def get_graph(self, **kwargs):
     self.validate_kwargs(kwargs)
     marketplaces: list[str] = kwargs.get("marketplaces") # type: ignore
     variants: list[str] = kwargs.get("variants") # type: ignore
     groupby: str|None = kwargs.get("groupby")
+    time_frame: list[str] = kwargs.get("time_frame") # type: ignore
     
-    self.handle_data_process(marketplaces, variants, groupby)
+    self.handle_data_process(marketplaces, variants, groupby, time_frame)
     
     return self.__get_graph(groupby)
   
@@ -48,17 +49,18 @@ class TotalSalesCountGraph(Graph):
       color=color
     )
   
-  def handle_data_process(self, marketplaces: list[str], variants: list[str], groupby: str|None) -> None:
-    self.filter_dataframe(marketplaces, variants)
+  def handle_data_process(self, marketplaces: list[str], variants: list[str], groupby: str|None, time_frame: list[str]) -> None:
+    self.filter_dataframe(marketplaces, variants, time_frame)
     self.df["QuantityShippedTrue"] = self.df.apply(lambda row: self.get_quantity_shipped_true(row), axis=1)
     self.df["PostedDate"] = pd.to_datetime(self.df["PostedDate"].str.split("T", expand=True)[0])
+    self.df = self.df[(self.df["PostedDate"] > time_frame[0]) & (self.df["PostedDate"] < time_frame[-1])]
     self.groupby_filter(marketplaces, variants, groupby)
     self.__dfs = list(map(self.fill_spaces_between_dates, self.__dfs))
     for df_ in self.__dfs:
       df_["QuantityShippedTrueCumulative"] = df_["QuantityShippedTrue"].cumsum()
     self.df = pd.concat(self.__dfs)
   
-  def filter_dataframe(self, marketplaces: list[str], variants: list[str]) -> None:
+  def filter_dataframe(self, marketplaces: list[str], variants: list[str], time_frame: list[str]) -> None:
     self.df = self.df[self.df["MarketplaceName"].isin(marketplaces)]
     variant_columns = [column for column in self.df.columns if "Variant." in column]
     for col in variant_columns:
@@ -101,12 +103,6 @@ class TotalSalesCountGraph(Graph):
   def validate_kwargs(self, kwargs) -> None:
     return super().validate_kwargs(kwargs, self.__required_kwargs)
 
-"""def get_total_sales_graph(dataframe: pd.DataFrame):
-  px.line(
-    data_frame=dataframe,
-    x="PostedDate"
-  )
-"""
 class GraphFactory:
   factories = {
     "total_sales_count": TotalSalesCountGraph
