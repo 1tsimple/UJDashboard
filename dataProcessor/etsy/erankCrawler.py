@@ -1,14 +1,14 @@
 import threading
 from typing import Self
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-options = Options()
-options.add_experimental_option("detach", True)
-
 class CrawlerManager:
+  __slots__ = "service", "options", "driver"
+  
   _instance = None # Singleton Instance
   _lock = threading.Lock() # Thread Safety
   def __new__(cls) -> Self: # Singleton Constructor
@@ -19,8 +19,8 @@ class CrawlerManager:
     return cls._instance
   
   def __init__(self) -> None:
-    self.options = Options()
     self.service = Service(ChromeDriverManager().install())
+    self.options = Options()
     self.driver = None
     self.__init()
   
@@ -28,4 +28,7 @@ class CrawlerManager:
     self.options.add_experimental_option("detach", True)
   
   def init_crawler(self) -> None:
-    raise NotImplementedError()
+    self.driver = webdriver.Chrome(
+      service=self.service,
+      options=self.options
+    )
