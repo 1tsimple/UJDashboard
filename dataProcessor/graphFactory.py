@@ -53,12 +53,13 @@ class TotalSalesCountGraph(Graph):
     self.filter_dataframe(marketplaces, variants)
     self.df["QuantityShippedTrue"] = self.df.apply(lambda row: self.get_quantity_shipped_true(row), axis=1)
     self.df["PostedDate"] = pd.to_datetime(self.df["PostedDate"].str.split("T", expand=True)[0])
-    self.df = self.df[(self.df["PostedDate"] > time_frame[0]) & (self.df["PostedDate"] < time_frame[-1])].reset_index(drop=True)
+    self.df = self.df[(self.df["PostedDate"] >= time_frame[0]) & (self.df["PostedDate"] <= time_frame[-1])].reset_index(drop=True)
     self.groupby_filter(marketplaces, variants, groupby)
     self.__dfs = list(map(self.fill_spaces_between_dates, self.__dfs))
     for df_ in self.__dfs:
       df_["QuantityShippedTrueCumulative"] = df_["QuantityShippedTrue"].cumsum()
     self.df = pd.concat(self.__dfs)
+    print(time_frame)
   
   def filter_dataframe(self, marketplaces: list[str], variants: list[str]) -> None:
     self.df = self.df[self.df["MarketplaceName"].isin(marketplaces)]
@@ -94,7 +95,7 @@ class TotalSalesCountGraph(Graph):
         self.__dfs.append(df_)
   
   @staticmethod
-  def fill_spaces_between_dates(dataframe: pd.DataFrame):
+  def fill_spaces_between_dates(dataframe: pd.DataFrame, time_frame=None):
     if dataframe.empty:
       return dataframe
     all_dates = pd.DataFrame(pd.date_range(dataframe["PostedDate"].min(), dataframe["PostedDate"].max()), columns=["PostedDate"])
