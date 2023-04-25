@@ -112,7 +112,7 @@ def get_graph(uuid: uuid.UUID):
         className="date-filter",
         min=0,
         max=7,
-        marks={0: "0", 7: "7"},
+        marks={0: "", 7: ""},
         step=1,
         pushable=7,
         allowCross=False,
