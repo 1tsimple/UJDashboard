@@ -126,6 +126,7 @@ class CallbackManager():
   def start_erank_crawl(self) -> None:
     @self.app.callback(
       Output("crawler-session-id", "data"),
+      Output("erank-iframe", "srcDoc"),
       Input("crawler-start-button", "n_clicks"),
       State("crawler-session-id", "data"),
       prevent_initial_call=True
@@ -138,5 +139,6 @@ class CallbackManager():
         if session_id == driver.session_id:
           crawler = driver
       if crawler is None:
-        return crawler
-      return crawler.session_id
+        return crawler, None
+      crawler.get("https://erank.com/")
+      return crawler.session_id, self.crawler_manager.get_page_source(crawler)
