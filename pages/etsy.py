@@ -43,9 +43,36 @@ layout = html.Div(id="content-container", children=[
   html.Div(id="erank-data-container", children=[
     html.Div(id="erank-filter-container", children=[
       html.Div(id="etsy-button-container", children=[
-        html.Button(id="crawler-starter", children="Start"),
-        html.Button(id="data-extractor", children="Extract Data"),
-        html.Button(id="apply-button", children="Apply")
+        dbc.ButtonGroup(
+          vertical=True,
+          className="crawler-button-group",
+          children=[
+            dbc.Button(
+              id="crawler-start-button",
+              className="crawler-start-button",
+              type="button",
+              outline=True,
+              color="grey",
+              children="Start"
+            ),
+            dbc.Button(
+              id="crawler-extract-button",
+              className="crawler-extract-button",
+              type="button",
+              outline=True,
+              color="grey",
+              children="Extract Data"
+            )
+          ]
+        ),
+        dbc.Button(
+          id="erank-filter-apply-button",
+          className="erank-filter-apply-button",
+          type="button",
+          outline=True,
+          color="grey",
+          children="Apply"
+        )
       ]),
       html.Div(id="erank-filters", children=get_filters())
     ]),
