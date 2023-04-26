@@ -8,6 +8,7 @@ from collections import defaultdict
 
 from database.dBManager import DBManager
 from dataProcessor.graphFactory import GraphFactory
+from dataProcessor.etsy.erankCrawler import CrawlerManager
 
 class FilterState(Enum):
   VISIBLE = {
@@ -25,16 +26,21 @@ Marketplace = {
 }
 
 class CallbackManager():
-  __slots__ = "app", "db"
-  def __init__(self, app: dash.Dash) -> None:
+  __slots__ = "app", "db", "crawler"
+  def __init__(self, app: dash.Dash, database: DBManager, erank_crawler: CrawlerManager) -> None:
     self.app = app
-    self.db = DBManager()
+    self.db = database
+    self.crawler = erank_crawler
   
   def init_callbacks(self) -> None:
+    # Home Page
     self.refresh_product_filter()
     self.get_product_sales()
     self.update_product_filters_options()
     self.update_graphs()
+    
+    # Etsy Page
+    self.start_erank_crawl()
   
   def refresh_product_filter(self) -> None:
     @self.app.callback(
@@ -116,3 +122,6 @@ class CallbackManager():
         time_frame=dates[date_indexes[0]:date_indexes[1]]
       )
       return graph
+  
+  def start_erank_crawl(self) -> None:
+    pass

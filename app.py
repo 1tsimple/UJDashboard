@@ -19,7 +19,15 @@ from dash import html, dcc, Input, Output, State, ALL, MATCH, ctx
 
 from components.header import get_header
 from components.footer import get_footer
+from database.dBManager import DBManager
+from dataProcessor.etsy.erankCrawler import CrawlerManager
 from callback import CallbackManager
+
+def setup(app: dash.Dash):
+  db = DBManager()
+  crawler = CrawlerManager()
+  cbm = CallbackManager(app, db, crawler)
+  cbm.init_callbacks()
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME])
 server = app.server
@@ -30,8 +38,6 @@ app.layout = html.Div(id="main-body", children=[
   html.Footer(id="footer-container", children=get_footer()),
 ])
 
-cbm = CallbackManager(app)
-cbm.init_callbacks()
-
 if __name__ == "__main__":
+  setup(app)
   app.run(host="0.0.0.0", debug=True)
