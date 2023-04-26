@@ -26,11 +26,11 @@ Marketplace = {
 }
 
 class CallbackManager():
-  __slots__ = "app", "db", "crawler"
-  def __init__(self, app: dash.Dash, database: DBManager, erank_crawler: CrawlerManager) -> None:
+  __slots__ = "app", "db", "crawler_manager"
+  def __init__(self, app: dash.Dash, database: DBManager, erank_crawler_manager: CrawlerManager) -> None:
     self.app = app
     self.db = database
-    self.crawler = erank_crawler
+    self.crawler_manager = erank_crawler_manager
   
   def init_callbacks(self) -> None:
     # Home Page
@@ -124,4 +124,19 @@ class CallbackManager():
       return graph
   
   def start_erank_crawl(self) -> None:
-    pass
+    @self.app.callback(
+      Output("crawler-session-id", "data"),
+      Input("crawler-start-button", "n_clicks"),
+      State("crawler-session-id", "data"),
+      prevent_initial_call=True
+    )
+    def callback(click: int, session_id: None | str):
+      crawler = None
+      if session_id is None:
+        crawler = self.crawler_manager.get_driver()
+      for driver in self.crawler_manager.drivers:
+        if session_id == driver.session_id:
+          crawler = driver
+      if crawler is None:
+        return crawler
+      return crawler.session_id

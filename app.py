@@ -26,6 +26,7 @@ from callback import CallbackManager
 def setup(app: dash.Dash):
   db = DBManager()
   crawler = CrawlerManager()
+  crawler.start()
   cbm = CallbackManager(app, db, crawler)
   cbm.init_callbacks()
 

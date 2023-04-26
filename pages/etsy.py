@@ -72,7 +72,8 @@ layout = html.Div(id="content-container", children=[
           outline=True,
           color="grey",
           children="Apply"
-        )
+        ),
+        dcc.Store("crawler-session-id")
       ]),
       html.Div(id="erank-filters", children=get_filters())
     ]),
