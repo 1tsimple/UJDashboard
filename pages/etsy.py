@@ -78,7 +78,11 @@ layout = html.Div(id="content-container", children=[
       html.Div(id="erank-filters", children=get_filters())
     ]),
     html.Div(id="erank-data-wrapper", children=[
-      
+      html.Iframe(
+        id='erank-iframe',
+        src=None,
+        style={'height': '600px', 'width': '100%'}
+      )
     ])
   ])
 ])

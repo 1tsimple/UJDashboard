@@ -25,6 +25,13 @@ class CrawlerManager:
     self.__init()
   
   def __init(self) -> None:
+    self.options.add_argument('--disable-web-security')
+    self.options.add_argument('--ignore-certificate-errors')
+    self.options.add_argument('--disable-dev-shm-usage')
+    self.options.add_argument('--disable-extensions')
+    self.options.add_argument('--disable-gpu')
+    self.options.add_argument('--no-sandbox')
+    self.options.add_argument('--disable-infobars')
     self.options.add_experimental_option("detach", True)
   
   def get_driver(self) -> webdriver.Remote:
@@ -59,3 +66,27 @@ class CrawlerManager:
   def start(self) -> None:
     thread = threading.Thread(target=self.check_crawlers, daemon=True)
     thread.start()
+  
+  @staticmethod
+  def get_page_source(driver: webdriver.Remote) -> str:
+    source = driver.page_source
+    css = driver.execute_script("""
+      var css = [];
+      for (var i=0; i<document.styleSheets.length; i++) {
+        var cssText = '';
+        var sheet = document.styleSheets[i];
+        try {
+          if (sheet.cssRules || sheet.rules) {
+            var rules = sheet.cssRules || sheet.rules;
+            for (var j=0; j<rules.length; j++) {
+              cssText += rules[j].cssText;
+            }
+          }
+        } catch (e) {
+          console.warn('Could not retrieve CSS from ' + sheet.href, e);
+        }
+        css.push(cssText);
+      }
+      return css.join('\\n');
+    """)
+    return source + "\n<style>" + css + "</style>"
