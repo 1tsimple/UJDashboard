@@ -20,14 +20,15 @@ from dash import html, dcc, Input, Output, State, ALL, MATCH, ctx
 from components.header import get_header
 from components.footer import get_footer
 from database.dBManager import DBManager
-from dataProcessor.etsy.erankCrawler import CrawlerManager
+from dataProcessor.webdriver.manager import DriverControllerManager
+from dataProcessor.webdriver.factory import WebdriverControllerFactory
 from callback import CallbackManager
 
 def setup(app: dash.Dash):
   db = DBManager()
-  crawler = CrawlerManager()
-  crawler.start()
-  cbm = CallbackManager(app, db, crawler)
+  dm = DriverControllerManager()
+  dm.start()
+  cbm = CallbackManager(app, db, dm, WebdriverControllerFactory())
   cbm.init_callbacks()
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME])
@@ -36,6 +37,9 @@ server = app.server
 app.layout = html.Div(id="main-body", children=[
   html.Header(children=get_header()),
   dash.page_container,
+  dcc.Location(id="page-url-checker", refresh=False),
+  html.Div(id="etsy-url-checker-dummy", style={"display": "none"}),
+  html.Div(id="etsy-url-checker-dummy2", style={"display": "none"}),
   html.Footer(id="footer-container", children=get_footer()),
 ])
 

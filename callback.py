@@ -2,13 +2,16 @@ import dash
 import json
 import pandas as pd
 from dash import Input, Output, State, ALL, MATCH, ctx
+from dash.exceptions import PreventUpdate
 from typing import Any
 from enum import Enum, StrEnum
 from collections import defaultdict
 
 from database.dBManager import DBManager
 from dataProcessor.graphFactory import GraphFactory
-from dataProcessor.etsy.erankCrawler import CrawlerManager
+from dataProcessor.webdriver.manager import DriverControllerManager
+from dataProcessor.webdriver.factory import WebdriverControllerFactory
+#from dataProcessor.etsy.erankCrawler import CrawlerManager
 
 class FilterState(Enum):
   VISIBLE = {
@@ -26,11 +29,12 @@ Marketplace = {
 }
 
 class CallbackManager():
-  __slots__ = "app", "db", "crawler_manager"
-  def __init__(self, app: dash.Dash, database: DBManager, erank_crawler_manager: CrawlerManager) -> None:
+  __slots__ = "app", "db", "driver_manager", "driver_factory"
+  def __init__(self, app: dash.Dash, database: DBManager, driver_manager: DriverControllerManager, driver_factory: WebdriverControllerFactory) -> None:
     self.app = app
     self.db = database
-    self.crawler_manager = erank_crawler_manager
+    self.driver_manager = driver_manager
+    self.driver_factory = driver_factory
   
   def init_callbacks(self) -> None:
     # Home Page
@@ -41,6 +45,8 @@ class CallbackManager():
     
     # Etsy Page
     self.start_erank_crawl()
+    #self.etsy_session_controller_trigger()
+    #self.etsy_session_controller()
   
   def refresh_product_filter(self) -> None:
     @self.app.callback(
@@ -134,11 +140,31 @@ class CallbackManager():
     def callback(click: int, session_id: None | str):
       crawler = None
       if session_id is None:
-        crawler = self.crawler_manager.get_driver()
-      for driver in self.crawler_manager.drivers:
-        if session_id == driver.session_id:
-          crawler = driver
+        crawler = self.driver_factory.get_driver("ErankKeywordScrapper")
+      else:
+        crawler = self.driver_manager.driver_controllers.get(session_id)
       if crawler is None:
         return crawler, None
-      crawler.get("https://erank.com/")
-      return crawler.session_id, self.crawler_manager.get_page_source(crawler)
+      crawler.initialize()
+      return crawler.session_id, crawler.get_page_source()
+  
+  def etsy_session_controller_trigger(self) -> None:
+    @self.app.callback(
+      Output("etsy-url-checker-dummy", "children"),
+      Input("page-url-checker", "pathname"),
+      prevent_initial_call=True
+    )
+    def callback(pathname: str):
+      if pathname != "/etsy":
+        raise PreventUpdate
+  
+  def etsy_session_controller(self) -> None:
+    @self.app.callback(
+      Output("etsy-url-checker-dummy2", "children"),
+      Input("etsy-url-checker-dummy", "children"),
+      State("crawler-session-id", "data"),
+      prevent_initial_call=True
+    )
+    def callback(children: str, session_id: str):
+      print(session_id)
+      return session_id
