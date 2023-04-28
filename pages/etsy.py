@@ -73,7 +73,7 @@ layout = html.Div(id="content-container", children=[
           color="grey",
           children="Apply"
         ),
-        dcc.Store("crawler-session-id")
+        dcc.Store("crawler-session-id", storage_type="local")
       ]),
       html.Div(id="erank-filters", children=get_filters())
     ]),

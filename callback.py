@@ -44,9 +44,7 @@ class CallbackManager():
     self.update_graphs()
     
     # Etsy Page
-    self.start_erank_crawl()
-    #self.etsy_session_controller_trigger()
-    #self.etsy_session_controller()
+    self.start_erank_crawl_session()
   
   def refresh_product_filter(self) -> None:
     @self.app.callback(
@@ -129,7 +127,7 @@ class CallbackManager():
       )
       return graph
   
-  def start_erank_crawl(self) -> None:
+  def start_erank_crawl_session(self) -> None:
     @self.app.callback(
       Output("crawler-session-id", "data"),
       Output("erank-iframe", "srcDoc"),
@@ -138,33 +136,12 @@ class CallbackManager():
       prevent_initial_call=True
     )
     def callback(click: int, session_id: None | str):
-      crawler = None
       if session_id is None:
         crawler = self.driver_factory.get_driver("ErankKeywordScrapper")
       else:
         crawler = self.driver_manager.driver_controllers.get(session_id)
       if crawler is None:
-        return crawler, None
+        crawler = self.driver_factory.get_driver("ErankKeywordScrapper")
       crawler.initialize()
+      self.driver_manager.add_controller(crawler)
       return crawler.session_id, crawler.get_page_source()
-  
-  def etsy_session_controller_trigger(self) -> None:
-    @self.app.callback(
-      Output("etsy-url-checker-dummy", "children"),
-      Input("page-url-checker", "pathname"),
-      prevent_initial_call=True
-    )
-    def callback(pathname: str):
-      if pathname != "/etsy":
-        raise PreventUpdate
-  
-  def etsy_session_controller(self) -> None:
-    @self.app.callback(
-      Output("etsy-url-checker-dummy2", "children"),
-      Input("etsy-url-checker-dummy", "children"),
-      State("crawler-session-id", "data"),
-      prevent_initial_call=True
-    )
-    def callback(children: str, session_id: str):
-      print(session_id)
-      return session_id

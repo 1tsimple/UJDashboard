@@ -1,3 +1,5 @@
+import logging
+
 import threading
 import time
 from typing import Self
@@ -17,17 +19,21 @@ class DriverControllerManager:
     return cls._instance
   
   def __init__(self) -> None:
+    logging.info("DriverControllerManager object has been created and initialized. {debug_info}".format(debug_info={"ObjectID": id(self)}))
     self.driver_controllers: dict[str, WebdriverController] = {}
   
   def add_controller(self, controller: WebdriverController) -> None:
     self.driver_controllers[controller.session_id] = controller
+    logging.info("WebdriverController with Session ID '{session_id}' object has been added to the DriverControllerManager. {debug_info}".format(session_id=controller.session_id, debug_info={"ManagerID": id(self)}))
+    
   
   def remove_controller(self, controller: WebdriverController) -> None:
     self.driver_controllers.pop(controller.session_id)
+    logging.info("WebdriverController with Session ID '{session_id}' object has been removed from the DriverControllerManager. {debug_info}".format(session_id=controller.session_id, debug_info={"ManagerID": id(self)}))
   
   def check_controllers(self) -> None:
     while True:
-      for session_id, controller in self.driver_controllers.items():
+      for session_id, controller in self.driver_controllers.copy().items():
         if controller.is_closed:
           controller.driver.quit()
           self.remove_controller(controller)

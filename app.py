@@ -37,9 +37,6 @@ server = app.server
 app.layout = html.Div(id="main-body", children=[
   html.Header(children=get_header()),
   dash.page_container,
-  dcc.Location(id="page-url-checker", refresh=False),
-  html.Div(id="etsy-url-checker-dummy", style={"display": "none"}),
-  html.Div(id="etsy-url-checker-dummy2", style={"display": "none"}),
   html.Footer(id="footer-container", children=get_footer()),
 ])
 

@@ -1,3 +1,5 @@
+import logging
+
 from typing import Self, Literal
 from abc import ABC, abstractmethod
 
@@ -75,6 +77,7 @@ class ErankKeywordScrapper(WebdriverController):
   
   def __init__(self, hub_url: str) -> None:
     super().__init__(hub_url)
+    logging.info("ErankKeywordScrapper object with Session ID '{session_id}' has been created and initialized. {debug_info}".format(session_id=self.session_id, debug_info={"ObjectID": id(self)}))
   
   def set_options(self):
     global DEFAULT_DRIVER_OPTIONS
@@ -82,7 +85,7 @@ class ErankKeywordScrapper(WebdriverController):
       self.options.add_argument(option)
   
   def initialize(self) -> None:
-    pass
+    self.driver.get(self.URL)
 
 class WebdriverControllerFactory:
   factories = {
