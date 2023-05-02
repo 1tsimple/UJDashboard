@@ -1,3 +1,4 @@
+import os
 import logging
 
 from typing import Self, Literal
@@ -6,7 +7,23 @@ from abc import ABC, abstractmethod
 from selenium import webdriver
 from selenium.webdriver import Remote
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchWindowException
+from selenium.common.exceptions import NoSuchWindowException, NoSuchElementException
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+
+"""
+ID = "id"
+XPATH = "xpath"
+LINK_TEXT = "link text"
+PARTIAL_LINK_TEXT = "partial link text"
+NAME = "name"
+TAG_NAME = "tag name"
+CLASS_NAME = "class name"
+CSS_SELECTOR = "css selector"
+"""
 
 DEFAULT_DRIVER_OPTIONS = [
   "--disable-web-security",
@@ -21,7 +38,7 @@ DEFAULT_DRIVER_OPTIONS = [
 class DriverNotInitialized(Exception): ...
 
 class WebdriverController:
-  __slots__ = "_hub_url", "options", "driver", "session_id"
+  __slots__ = "_hub_url", "options", "driver", "session_id", "wait", "action"
   
   def __init__(self, hub_url: str) -> None:
     self._hub_url = hub_url
@@ -32,6 +49,8 @@ class WebdriverController:
       options=self.options,
     )
     self.session_id: str = self.driver.session_id # type: ignore
+    self.wait = WebDriverWait(self.driver, 5)
+    self.action = ActionChains(self.driver)
   
   def set_options(self): ...
   
@@ -83,9 +102,36 @@ class ErankKeywordScrapper(WebdriverController):
     global DEFAULT_DRIVER_OPTIONS
     for option in DEFAULT_DRIVER_OPTIONS:
       self.options.add_argument(option)
+    self.options.add_argument("start-maximized")
   
   def initialize(self) -> None:
     self.driver.get(self.URL)
+    self.log_in()
+    self.navigate_to_keyword_research_and_tool()
+  
+  def log_in(self) -> None:
+    log_in_link = self.wait.until(EC.visibility_of_element_located((By.LINK_TEXT, "Login")))
+    log_in_link.click()
+    
+    email_input = self.wait.until(EC.visibility_of_element_located((By.ID, "signin-email")))
+    email_input.send_keys(os.environ.get("erank_email"))
+    
+    password_input = self.wait.until(EC.visibility_of_element_located((By.ID, "signin-password")))
+    password_input.send_keys(os.environ.get("erank_password"))
+    
+    log_in_button = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//button[contains(text(),'Login')]")))
+    log_in_button.click()
+  
+  def navigate_to_keyword_research_and_tool(self) -> None:
+    self.driver.get(self.URL + "keyword-explorer?country=USA&source=etsy")
+    # create a new tab
+    self.driver.execute_script("window.open('');")
+    self.driver.switch_to.window(self.driver.window_handles[-1])
+    
+    self.driver.get(self.URL + "keyword-tool?country=USA")
+  
+  def extract_keyword_data(self, keyword: str):
+    self.driver.switch_to.window(self.driver.window_handles[0])
 
 class WebdriverControllerFactory:
   factories = {

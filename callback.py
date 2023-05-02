@@ -45,7 +45,7 @@ class CallbackManager():
     
     # Etsy Page
     self.start_erank_crawl_session()
-    #self.extract_keyword_data()
+    self.extract_keyword_data()
     self.check_erank_crawler_status()
     
   
@@ -151,13 +151,18 @@ class CallbackManager():
   
   def extract_keyword_data(self) -> None:
     @self.app.callback(
-      Output("crawler-keyword-input", "value"),
-      Input("crawler-extract-button", "n_clicks"),
-      State("crawler-keyword-input", "value"),
+      Output("erank-search-bar", "value"),
+      Input("erank-search-button", "n_clicks"),
+      State("erank-search-bar", "value"),
+      Input("erank-search-bar", "n_submit"),
+      State("erank-crawler-session-id", "data"),
       prevent_initial_call=True
     )
-    def callback(click: int, keyword: str):
-      print(keyword)
+    def callback(click: int, keyword: str, submit: int, session_id: str):
+      crawler = self.driver_manager.driver_controllers.get(session_id)
+      if crawler is None:
+        return PreventUpdate
+      crawler.extract_keyword_data("") # type: ignore
       return keyword
   
   def check_erank_crawler_status(self) -> None:

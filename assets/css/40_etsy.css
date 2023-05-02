@@ -23,12 +23,15 @@
   min-width: 200px;
 }
 
+#search-bar-container #erank-search-button {
+  border: none;
+  background: transparent;
+  position: absolute;
+  right: 0;
+  padding: 4px 8px 3px 3px;
+}
 #search-bar-container #erank-search-icon {
   color: var(--bg-grey);
-  position: absolute;
-  right: 0px;
-  padding: 8px 8px 7px 7px;
-  cursor: pointer;
 }
 
 #search-bar-container #erank-search-icon:hover {
