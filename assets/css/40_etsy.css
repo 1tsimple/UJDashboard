@@ -1,4 +1,4 @@
-#erank-data-container {
+#content-container-inner {
   margin-top: 10px;
   display: inline-block;
   background-color: white;
@@ -8,27 +8,60 @@
   max-height: 100%;
 }
 
+#erank-crawler-control {
+  display: flex;
+  padding: 10px;
+  justify-content: space-between;
+  background-color: whitesmoke;
+}
+
+#search-bar-container {
+  display: flex;
+  position: relative;
+  width: 45%;
+  max-width: 280px;
+  min-width: 200px;
+}
+
+#search-bar-container #erank-search-icon {
+  color: var(--bg-grey);
+  position: absolute;
+  right: 0px;
+  padding: 8px 8px 7px 7px;
+  cursor: pointer;
+}
+
+#search-bar-container #erank-search-icon:hover {
+  color: var(--bg-blue);
+}
+
+#crawler-status-container {
+  display: flex;
+}
+
+#crawler-status-container #crawler-status {
+  display: flex;
+}
+
+#crawler-status-container #crawler-status #crawler-status-icon {
+  line-height: 31px;
+  padding-right: 10px;
+}
+
+#crawler-status-container #crawler-status #crawler-status-msg {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  line-height: 31px;
+}
+
+#crawler-status-container #erank-crawler-starter {
+  background: white;
+  width: 80px;
+  margin-left: 10px;
+}
+
 #erank-filter-container {
   display: flex;
-}
-
-#etsy-button-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 30%;
-  margin: 10px 0 10px 10px;
-}
-
-#etsy-button-container button {
-  text-transform: uppercase;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-}
-
-#etsy-button-container button:hover {
-  color: var(--bg-blue);
 }
 
 #erank-filters {

@@ -44,7 +44,8 @@ class CallbackManager():
     self.update_graphs()
     
     # Etsy Page
-    self.start_erank_crawl_session()
+    #self.start_erank_crawl_session()
+    #self.extract_keyword_data()
   
   def refresh_product_filter(self) -> None:
     @self.app.callback(
@@ -145,3 +146,14 @@ class CallbackManager():
       crawler.initialize()
       self.driver_manager.add_controller(crawler)
       return crawler.session_id, crawler.get_page_source()
+  
+  def extract_keyword_data(self) -> None:
+    @self.app.callback(
+      Output("crawler-keyword-input", "value"),
+      Input("crawler-extract-button", "n_clicks"),
+      State("crawler-keyword-input", "value"),
+      prevent_initial_call=True
+    )
+    def callback(click: int, keyword: str):
+      print(keyword)
+      return keyword

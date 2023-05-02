@@ -25,10 +25,9 @@ from dataProcessor.webdriver.factory import WebdriverControllerFactory
 from callback import CallbackManager
 
 def setup(app: dash.Dash):
-  db = DBManager()
   dm = DriverControllerManager()
   dm.start()
-  cbm = CallbackManager(app, db, dm, WebdriverControllerFactory())
+  cbm = CallbackManager(app, DBManager(), dm, WebdriverControllerFactory())
   cbm.init_callbacks()
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME])

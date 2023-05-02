@@ -40,41 +40,39 @@ def __get_filters(ids: tuple[str, ...], types: tuple[str, ...], mins: tuple[int,
   ])
 
 layout = html.Div(id="content-container", children=[
-  html.Div(id="erank-data-container", children=[
-    html.Div(id="erank-filter-container", children=[
-      html.Div(id="etsy-button-container", children=[
-        dbc.ButtonGroup(
-          vertical=True,
-          className="crawler-button-group",
-          children=[
-            dbc.Button(
-              id="crawler-start-button",
-              className="crawler-start-button",
-              type="button",
-              outline=True,
-              color="grey",
-              children="Start"
-            ),
-            dbc.Button(
-              id="crawler-extract-button",
-              className="crawler-extract-button",
-              type="button",
-              outline=True,
-              color="grey",
-              children="Extract Data"
-            )
-          ]
+  html.Div(id="content-container-inner", children=[
+    html.Div(id="erank-crawler-control", children=[
+      html.Div(id="search-bar-container", children=[
+        dbc.Input(
+          id="erank-search-bar",
+          size="sm",
+          placeholder="Search"
         ),
-        dbc.Button(
-          id="erank-filter-apply-button",
-          className="erank-filter-apply-button",
-          type="button",
-          outline=True,
-          color="grey",
-          children="Apply"
-        ),
-        dcc.Store("crawler-session-id", storage_type="local")
+        html.I(
+          id="erank-search-icon",
+          className="fa-solid fa-magnifying-glass"
+        )
       ]),
+      html.Div(id="crawler-status-container", children=[
+        html.Div(id="crawler-status", children=[
+          dbc.Spinner(id="erank-spinner", children=[
+            html.I(
+              id="crawler-status-icon",
+              className="fa-solid fa-circle-xmark"
+            )
+          ]),
+          html.Span(id="crawler-status-msg", children="Crawler is disconnected!")
+        ]),
+        dbc.Button(
+          id="erank-crawler-starter",
+          size="sm",
+          children="Start",
+          color="grey",
+          outline=True
+        )
+      ])
+    ]),
+    html.Div(id="erank-filter-container", children=[
       html.Div(id="erank-filters", children=get_filters())
     ]),
     html.Div(id="erank-data-wrapper", children=[
