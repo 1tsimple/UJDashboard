@@ -61,15 +61,17 @@ layout = html.Div(id="content-container", children=[
               className="fa-solid fa-circle-xmark"
             )
           ]),
-          html.Span(id="crawler-status-msg", children="Crawler is disconnected!")
+          html.Span(id="crawler-status-msg", children="Crawler is disconnected!"),
+          dcc.Interval(id="erank-crawler-status-checker", interval=3000)
         ]),
         dbc.Button(
-          id="erank-crawler-starter",
+          id="erank-crawler-start-button",
           size="sm",
           children="Start",
           color="grey",
           outline=True
-        )
+        ),
+        dcc.Store(id="erank-crawler-session-id")
       ])
     ]),
     html.Div(id="erank-filter-container", children=[
