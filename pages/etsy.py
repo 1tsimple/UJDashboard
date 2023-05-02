@@ -55,13 +55,14 @@ layout = html.Div(id="content-container", children=[
       ]),
       html.Div(id="crawler-status-container", children=[
         html.Div(id="crawler-status", children=[
-          dbc.Spinner(id="erank-spinner", children=[
+          dbc.Spinner(id="erank-status-spinner", color="red", size="sm", children=[
             html.I(
               id="crawler-status-icon",
+              style={"color": "red"},
               className="fa-solid fa-circle-xmark"
             )
           ]),
-          html.Span(id="crawler-status-msg", children="Crawler is disconnected!"),
+          html.Span(id="crawler-status-msg", style={"color": "red"}, children="Crawler is disconnected!"),
           dcc.Interval(id="erank-crawler-status-checker", interval=3000)
         ]),
         dbc.Button(

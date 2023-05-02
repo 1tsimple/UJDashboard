@@ -44,8 +44,10 @@ class CallbackManager():
     self.update_graphs()
     
     # Etsy Page
-    #self.start_erank_crawl_session()
+    self.start_erank_crawl_session()
     #self.extract_keyword_data()
+    self.check_erank_crawler_status()
+    
   
   def refresh_product_filter(self) -> None:
     @self.app.callback(
@@ -130,10 +132,10 @@ class CallbackManager():
   
   def start_erank_crawl_session(self) -> None:
     @self.app.callback(
-      Output("crawler-session-id", "data"),
-      Output("erank-iframe", "srcDoc"),
-      Input("crawler-start-button", "n_clicks"),
-      State("crawler-session-id", "data"),
+      Output("erank-crawler-session-id", "data"),
+      #Output("erank-iframe", "srcDoc"),
+      Input("erank-crawler-start-button", "n_clicks"),
+      State("erank-crawler-session-id", "data"),
       prevent_initial_call=True
     )
     def callback(click: int, session_id: None | str):
@@ -145,7 +147,7 @@ class CallbackManager():
         crawler = self.driver_factory.get_driver("ErankKeywordScrapper")
       crawler.initialize()
       self.driver_manager.add_controller(crawler)
-      return crawler.session_id, crawler.get_page_source()
+      return crawler.session_id#, crawler.get_page_source()
   
   def extract_keyword_data(self) -> None:
     @self.app.callback(
@@ -157,3 +159,21 @@ class CallbackManager():
     def callback(click: int, keyword: str):
       print(keyword)
       return keyword
+  
+  def check_erank_crawler_status(self) -> None:
+    @self.app.callback(
+      Output("crawler-status-msg", "children"),
+      Output("crawler-status-icon", "className"),
+      Output("erank-status-spinner", "color"),
+      Output("crawler-status-msg", "style"),
+      Output("crawler-status-icon", "style"),
+      Input("erank-crawler-status-checker", "n_intervals"),
+      State("erank-crawler-session-id", "data")
+    )
+    def callback(interval: int, session_id: str|None):
+      if session_id is None:
+        return "Crawler is disconnected!", "fa-solid fa-circle-xmark", "red", {"color": "red"}, {"color": "red"}
+      else:
+        if self.driver_manager.driver_controllers.get(session_id) is None:
+          return "Crawler is disconnected!", "fa-solid fa-circle-xmark", "red", {"color": "red"}, {"color": "red"}
+        return "Crawler is connected!", "fa-solid fa-circle-check", "green", {"color": "green"}, {"color": "green"}
