@@ -6,10 +6,10 @@ import dash_bootstrap_components as dbc
 dash.register_page(__name__)
 
 get_filters = lambda : [div for div in __get_filters(
-  ids=("character-count", "average-searches", "average-clicks", "average-ctr", "etsy-competition", "google-searches", "google-cpc"),
-  types=("number", "number", "number", "number", "number", "number", "number"),
-  mins=(0, 0, 0, 0, 0, 0, 0),
-  steps=(1, 100, 100, 1, 1000, 1000, 1)
+  ids=("character-count", "tag-occurrences", "average-searches", "average-clicks", "average-ctr", "etsy-competition", "google-searches", "google-cpc"),
+  types=("number", "number", "number", "number", "number", "number", "number", "number"),
+  mins=(0, 0, 0, 0, 0, 0, 0, 0),
+  steps=(1, 1, 100, 100, 1, 1000, 1000, 1)
 )]
 
 def __get_filters(ids: tuple[str, ...], types: tuple[str, ...], mins: tuple[int, ...], steps: tuple[int, ...]):
@@ -82,6 +82,28 @@ layout = html.Div(id="content-container", children=[
       html.Div(id="erank-filters", children=get_filters())
     ]),
     html.Div(id="erank-data-wrapper", children=[
+      dcc.Store("erank-keyword-data-raw", storage_type="session"),
+      dcc.Store("erank-keyword-data-filtered", storage_type="session"),
+      html.Div(id="erank-data-container", children=[
+      ]),
+      html.Div(id="erank-data-container-removed", children=[
+      ]),
+      dbc.Alert(
+        color="primary",
+        #dismissable=True,
+        children=[
+          html.Span(children=1),
+          html.Span(2),
+          html.Span(3),
+          html.Span(4),
+          html.Span(5),
+          html.Span(6),
+          html.Span(7),
+          html.Span(8),
+          html.Span(9),
+          html.Button(type="button", className="btn-close")
+        ]
+      )
     ])
   ])
 ])

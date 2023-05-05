@@ -1,5 +1,6 @@
 import dash
 import json
+import asyncio
 import pandas as pd
 from dash import Input, Output, State, ALL, MATCH, ctx
 from dash.exceptions import PreventUpdate
@@ -45,8 +46,10 @@ class CallbackManager():
     
     # Etsy Page
     self.start_erank_crawl_session()
-    self.extract_keyword_data()
     self.check_erank_crawler_status()
+    self.extract_keyword_data()
+    self.filter_keyword_data()
+    self.update_filtered_keywords_html()
     
   
   def refresh_product_filter(self) -> None:
@@ -149,22 +152,6 @@ class CallbackManager():
       self.driver_manager.add_controller(crawler)
       return crawler.session_id#, crawler.get_page_source()
   
-  def extract_keyword_data(self) -> None:
-    @self.app.callback(
-      Output("erank-search-bar", "value"),
-      Input("erank-search-button", "n_clicks"),
-      State("erank-search-bar", "value"),
-      Input("erank-search-bar", "n_submit"),
-      State("erank-crawler-session-id", "data"),
-      prevent_initial_call=True
-    )
-    def callback(click: int, keyword: str, submit: int, session_id: str):
-      crawler = self.driver_manager.driver_controllers.get(session_id)
-      if crawler is None:
-        return PreventUpdate
-      crawler.extract_keyword_data("") # type: ignore
-      return keyword
-  
   def check_erank_crawler_status(self) -> None:
     @self.app.callback(
       Output("crawler-status-msg", "children"),
@@ -182,3 +169,62 @@ class CallbackManager():
         if self.driver_manager.driver_controllers.get(session_id) is None:
           return "Crawler is disconnected!", "fa-solid fa-circle-xmark", "red", {"color": "red"}, {"color": "red"}
         return "Crawler is connected!", "fa-solid fa-circle-check", "green", {"color": "green"}, {"color": "green"}
+  
+  def extract_keyword_data(self) -> None:
+    @self.app.callback(
+      Output("erank-keyword-data-raw", "data"),
+      Input("erank-search-button", "n_clicks"),
+      State("erank-search-bar", "value"),
+      Input("erank-search-bar", "n_submit"),
+      State("erank-crawler-session-id", "data"),
+      prevent_initial_call=True
+    )
+    def callback(click: int, keyword: str, submit: int, session_id: str):
+      crawler = self.driver_manager.driver_controllers.get(session_id)
+      if crawler is None:
+        return PreventUpdate()
+      crawler.search_keyword_data(keyword)
+      return crawler.get_keyword_data()
+  
+  def filter_keyword_data(self) -> None:
+    @self.app.callback(
+      Output("erank-keyword-data-filtered", "data"),
+      Input("erank-keyword-data-raw", "data"),
+      Input("min-character-count", "value"),
+      Input("max-character-count", "value"),
+      Input("min-tag-occurrences", "value"),
+      Input("max-tag-occurrences", "value"),
+      Input("min-average-searches", "value"),
+      Input("max-average-searches", "value"),
+      Input("min-average-clicks", "value"),
+      Input("max-average-clicks", "value"),
+      Input("min-average-ctr", "value"),
+      Input("max-average-ctr", "value"),
+      Input("min-etsy-competition", "value"),
+      Input("max-etsy-competition", "value"),
+      Input("min-google-searches", "value"),
+      Input("max-google-searches", "value"),
+      Input("min-google-cpc", "value"),
+      Input("max-google-cpc", "value"),
+      prevent_initial_call=True
+    )
+    def callback(
+      data: dict[str, list[list[str]]],
+      min_character_count: int, max_character_count: int,
+      min_tag_occurrences: int, max_tag_occurrences: int,
+      min_average_searches: int, max_average_searches: int,
+      min_average_clicks: int, max_average_clicks: int,
+      min_average_ctr: int, max_average_ctr: int,
+      min_etsy_competition: int, max_etsy_competition: int,
+      min_google_searches: int, max_google_searches: int,
+      min_google_cpc: int, max_google_cpc: int
+    ):
+      return data
+  
+  def update_filtered_keywords_html(self) -> None:
+    @self.app.callback(
+      Output("erank-data-container", "children"),
+      Input("erank-keyword-data-filtered", "data"),
+    )
+    def callback(data):
+      pass

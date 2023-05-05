@@ -312,7 +312,4 @@ if __name__ == "__main__":
   import pandas as pd
   from pprint import pprint
   db = DBManager()
-  #data = db.puller.get_product_options()
-  start = time.perf_counter()
-  data = db.puller.get_product_sales(["D20501209 -1", "D20501209 -2", "D20501209 -3", "D20501209 -4", "D20501209 -5", "D20501209 -7", "D20501209 -8", "D20501209 -9", "D20501209 -10", "D20501209 -11", "D20501209 -12"])
-  print(time.perf_counter() - start)
+  db.inserter.update_orders("2023-03-01")
