@@ -4,7 +4,7 @@ import asyncio
 import pandas as pd
 from dash import Input, Output, State, ALL, MATCH, ctx
 from dash.exceptions import PreventUpdate
-from typing import Any
+from typing import Any, Literal
 from enum import Enum, StrEnum
 from collections import defaultdict
 
@@ -28,6 +28,16 @@ Marketplace = {
   "Amazon.ca": "Canada",
   "Amazon.com": "United States"
 }
+
+def str_to_int(text: str, default_value=None, type: Literal["int", "float"]="int") -> int | float | None:
+  try:
+    if type == "int":
+      number = int(text)
+    else:
+      number = float(text)
+  except ValueError:
+    number = default_value
+  return number
 
 class CallbackManager():
   __slots__ = "app", "db", "driver_manager", "driver_factory"
@@ -219,7 +229,52 @@ class CallbackManager():
       min_google_searches: int, max_google_searches: int,
       min_google_cpc: int, max_google_cpc: int
     ):
+      data_research = list(map(lambda x: self.__fix_dtypes(x, "research"), data["keyword-research-data"]))
+      data_tool = list(map(lambda x: self.__fix_dtypes(x, "tool"), data["keyword-tool-data"]))
+      
+      data_clean = {}
+      for kw_data in data_research + data_tool:
+        keyword = next(iter(kw_data))
+        if keyword not in data_clean.keys():
+          data_clean |= kw_data
+        else:
+          data_clean[keyword] |= kw_data[keyword]
+      # TODO: dtypes fixed, filter the data
       return data
+  
+  @staticmethod
+  def __fix_dtypes(__list: list[str], __type: Literal["tool", "research"]) -> dict[str, dict[str, str|int|float|None]]:
+    _list = list(map(lambda x: "" if x == "Unknown" else x.replace(",", "").replace("%", ""), __list))
+    print("xd")
+    print(_list)
+    if __type == "research":
+      return {
+        _list[0]: {
+          "character_count": str_to_int(_list[1]),
+          "tag_occurrences": None,
+          "average_searches": str_to_int(_list[2]),
+          "average_clicks": str_to_int(_list[3]),
+          "average_ctr": str_to_int(_list[4]),
+          "etsy_competition": str_to_int(_list[5]),
+          "google_searches": str_to_int(_list[6]),
+          "google_cpc": str_to_int(_list[7]),
+          "long_tail_keyword": _list[9]
+        }
+      }
+    else:
+      return {
+        _list[0]: {
+          "character_count": len(_list[0]),
+          "tag_occurrences": str_to_int(_list[1]),
+          "average_searches": str_to_int(_list[2]),
+          "average_clicks": str_to_int(_list[3]),
+          "average_ctr": str_to_int(_list[4]),
+          "etsy_competition": str_to_int(_list[5]),
+          "google_searches": str_to_int(_list[6]),
+          "google_cpc": None,
+          "long_tail_keyword": _list[7]
+        }
+      }
   
   def update_filtered_keywords_html(self) -> None:
     @self.app.callback(
