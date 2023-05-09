@@ -12,7 +12,8 @@ from database.dBManager import DBManager
 from dataProcessor.graphFactory import GraphFactory
 from dataProcessor.webdriver.manager import DriverControllerManager
 from dataProcessor.webdriver.factory import WebdriverControllerFactory
-#from dataProcessor.etsy.erankCrawler import CrawlerManager
+
+from components.erankKeyword import get_keyword_data_container
 
 class FilterState(Enum):
   VISIBLE = {
@@ -297,7 +298,6 @@ class CallbackManager():
             break
           continue
         _min, _max = __filter[filter_key]
-        print(_min, _max)
         if (_min is not None and _min >= value) or (_max is not None and _max <= value):
           del filtered[keyword]
           break
@@ -310,6 +310,18 @@ class CallbackManager():
       prevent_initial_call=True
     )
     def callback(data):
-      from pprint import pprint
-      pprint(data)
-      pass
+      return [
+        get_keyword_data_container(
+          keyword=keyword,
+          character_count=_data["character_count"],
+          tag_occurrences=_data["tag_occurrences"],
+          average_searches=_data["average_searches"],
+          average_clicks=_data["average_clicks"],
+          average_ctr=_data["average_ctr"],
+          etsy_competition=_data["etsy_competition"],
+          google_searches=_data["google_searches"],
+          google_cpc=_data["google_cpc"],
+          long_tail_keyword=_data["long_tail_keyword"]
+        )
+        for keyword, _data in data.items()
+      ]

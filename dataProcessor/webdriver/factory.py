@@ -46,7 +46,7 @@ class WebdriverController(ABC):
       options=self.options,
     )
     self.session_id: str = self.driver.session_id # type: ignore
-    self.wait = WebDriverWait(self.driver, 5)
+    self.wait = WebDriverWait(self.driver, 10)
     self.action = ActionChains(self.driver)
   
   def set_options(self): ...

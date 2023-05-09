@@ -94,3 +94,49 @@
 #erank-filters .mix-max-filter {
   display: flex;
 }
+
+.erank-keyword-data-card {
+  width: 97%;
+  margin: 0 1.5% 2px 1.5%;
+  display: flex;
+  background-color: white;
+  border: 1px solid var(--bg-grey);
+}
+
+.erank-keyword-data-card:hover {
+  border-color: var(--bg-blue);
+}
+
+.erank-keyword-data-card > div {
+  display: flex;
+  align-items: center;
+}
+
+.erank-keyword-data-card > div:nth-last-child(-n+10) {
+  justify-content: center;
+}
+
+.erank-keyword-data-card > div:first-child {
+  width: calc(25% - 30px);
+}
+
+.erank-keyword-data-card > div:nth-child(2),
+.erank-keyword-data-card > div:nth-child(3),
+.erank-keyword-data-card > div:nth-child(6),
+.erank-keyword-data-card > div:nth-child(9),
+.erank-keyword-data-card > div:nth-child(10)  {
+  width: 7%;
+}
+
+.erank-keyword-data-card > div:nth-child(4),
+.erank-keyword-data-card > div:nth-child(5),
+.erank-keyword-data-card > div:nth-child(7),
+.erank-keyword-data-card > div:nth-child(8) {
+  width: 10%;
+}
+
+.erank-keyword-data-card > button {
+  position: absolute;
+  right: 6px;
+  top: calc(50% - 12px);
+}

@@ -84,26 +84,9 @@ layout = html.Div(id="content-container", children=[
     html.Div(id="erank-data-wrapper", children=[
       dcc.Store("erank-keyword-data-raw", storage_type="session"),
       dcc.Store("erank-keyword-data-filtered", storage_type="session"),
-      html.Div(id="erank-data-container", children=[
-      ]),
+      dcc.Loading(id="erank-data-container"),
       html.Div(id="erank-data-container-removed", children=[
       ]),
-      dbc.Alert(
-        color="primary",
-        #dismissable=True,
-        children=[
-          html.Span(children=1),
-          html.Span(2),
-          html.Span(3),
-          html.Span(4),
-          html.Span(5),
-          html.Span(6),
-          html.Span(7),
-          html.Span(8),
-          html.Span(9),
-          html.Button(type="button", className="btn-close")
-        ]
-      )
     ])
   ])
 ])
