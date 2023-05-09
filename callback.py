@@ -220,14 +220,14 @@ class CallbackManager():
     )
     def callback(
       data: dict[str, list[list[str]]],
-      min_character_count: int, max_character_count: int,
-      min_tag_occurrences: int, max_tag_occurrences: int,
-      min_average_searches: int, max_average_searches: int,
-      min_average_clicks: int, max_average_clicks: int,
-      min_average_ctr: int, max_average_ctr: int,
-      min_etsy_competition: int, max_etsy_competition: int,
-      min_google_searches: int, max_google_searches: int,
-      min_google_cpc: int, max_google_cpc: int
+      min_character_count: int|None, max_character_count: int|None,
+      min_tag_occurrences: int|None, max_tag_occurrences: int|None,
+      min_average_searches: int|None, max_average_searches: int|None,
+      min_average_clicks: int|None, max_average_clicks: int|None,
+      min_average_ctr: int|None, max_average_ctr: int|None,
+      min_etsy_competition: int|None, max_etsy_competition: int|None,
+      min_google_searches: int|None, max_google_searches: int|None,
+      min_google_cpc: int|None, max_google_cpc: int|None
     ):
       data_research = list(map(lambda x: self.__fix_dtypes(x, "research"), data["keyword-research-data"]))
       data_tool = list(map(lambda x: self.__fix_dtypes(x, "tool"), data["keyword-tool-data"]))
@@ -239,14 +239,22 @@ class CallbackManager():
           data_clean |= kw_data
         else:
           data_clean[keyword] |= kw_data[keyword]
-      # TODO: dtypes fixed, filter the data
-      return data
+      __filter = {
+        "character_count": (min_character_count, max_character_count),
+        "tag_occurrences": (min_tag_occurrences, max_tag_occurrences),
+        "average_searches": (min_average_searches, max_average_searches),
+        "average_clicks": (min_average_clicks, max_average_clicks),
+        "average_ctr": (min_average_ctr, max_average_ctr),
+        "etsy_competition": (min_etsy_competition, max_etsy_competition),
+        "google_searches": (min_google_searches, max_google_searches),
+        "google_cpc": (min_google_cpc, max_google_cpc),
+        "long_tail_keyword": None
+      }
+      return self.__filter_data(data_clean, __filter)
   
   @staticmethod
   def __fix_dtypes(__list: list[str], __type: Literal["tool", "research"]) -> dict[str, dict[str, str|int|float|None]]:
     _list = list(map(lambda x: "" if x == "Unknown" else x.replace(",", "").replace("%", ""), __list))
-    print("xd")
-    print(_list)
     if __type == "research":
       return {
         _list[0]: {
@@ -276,10 +284,32 @@ class CallbackManager():
         }
       }
   
+  @staticmethod
+  def __filter_data(__data: dict[str, dict[str, int|float|None]], __filter: dict[str, tuple[int|None, int|None]]) -> dict[str, dict[str, str|int|float|None]]:
+    filtered = __data.copy()
+    for keyword, data in __data.items():
+      for filter_key, value in data.items():
+        if value is None:
+          continue
+        if filter_key == "long_tail_keyword":
+          if __filter[filter_key] is not None and value != __filter[filter_key]:
+            del filtered[keyword]
+            break
+          continue
+        _min, _max = __filter[filter_key]
+        print(_min, _max)
+        if (_min is not None and _min >= value) or (_max is not None and _max <= value):
+          del filtered[keyword]
+          break
+    return filtered
+  
   def update_filtered_keywords_html(self) -> None:
     @self.app.callback(
       Output("erank-data-container", "children"),
       Input("erank-keyword-data-filtered", "data"),
+      prevent_initial_call=True
     )
     def callback(data):
+      from pprint import pprint
+      pprint(data)
       pass

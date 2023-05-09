@@ -11,7 +11,6 @@ logging.basicConfig(
 )
 
 # ---------- IMPORTS ----------
-
 import threading
 import multiprocessing as mp
 import pymongo
@@ -22,7 +21,6 @@ from re import search
 from itertools import cycle
 from typing import Any, Self, Generator, Literal
 from datetime import datetime, timezone, timedelta
-from concurrent.futures import ThreadPoolExecutor
 from sp_api.base import Marketplaces
 from sp_api.api import Orders, Finances
 
@@ -312,4 +310,4 @@ if __name__ == "__main__":
   import pandas as pd
   from pprint import pprint
   db = DBManager()
-  db.inserter.update_orders("2023-03-01")
+  #db.inserter.update_orders("2023-03-01", Marketplaces.CA)
