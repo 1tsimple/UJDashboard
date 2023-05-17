@@ -129,8 +129,12 @@ class ErankKeywordScrapper(WebdriverController):
     log_in_button.click()
   
   def get_keyword_data(self, keyword: str) -> dict[str, dict[str, dict[str, str | int | float | None]]]:
-    keyword_tool_data = self.__extract_keyword_research_data(keyword)
-    keyword_research_data = self.__extract_keyword_tool_data(keyword)
+    keyword_research_data = self.__extract_keyword_research_data(keyword)
+    keyword_tool_data = self.__extract_keyword_tool_data(keyword)
+    
+    from pprint import pprint
+    pprint(keyword_tool_data)
+    
     return {"keyword-tool-data": keyword_tool_data, "keyword-research-data": keyword_research_data}
   
   def __extract_keyword_research_data(self, keyword: str):
@@ -141,9 +145,9 @@ class ErankKeywordScrapper(WebdriverController):
     data: list[list[str]] = list(map(lambda row: list(map(lambda x: x.text.lstrip().rstrip(), row.find_all("td"))), rows))
     clean_data = {}
     for row in data:
-      print(row)
       clean_data[row[0]] = {
         ERANK_DATA_KEYS.word_count: len(row[0].split(" ")),
+        ERANK_DATA_KEYS.tag_occurrences: None,
         ERANK_DATA_KEYS.average_searches: None if row[4] == "" or row[4] == "Unknown" else int(row[4].replace(",", "").replace("< 2", "")),
         ERANK_DATA_KEYS.average_clicks: None if row[5] == "" or row[5] == "Unknown" else int(row[5].replace(",", "").replace("< 2", "")),
         ERANK_DATA_KEYS.average_ctr: None if row[6].replace("%", "") == "" or row[6] == "Unknown" else int(row[6].replace("%", "").replace("< 2", "")),
@@ -170,6 +174,7 @@ class ErankKeywordScrapper(WebdriverController):
     for kw_data in _json["keyword_ideas"]["all"]:
       clean_data[kw_data["keyword"]] = {
         ERANK_DATA_KEYS.word_count: len(kw_data["keyword"].split(" ")),
+        ERANK_DATA_KEYS.tag_occurrences: kw_data["occurences"],
         ERANK_DATA_KEYS.average_searches: kw_data["avg_searches"]["order_value"],
         ERANK_DATA_KEYS.average_clicks: kw_data["avg_clicks"]["order_value"],
         ERANK_DATA_KEYS.average_ctr: kw_data["ctr"]["order_value"],

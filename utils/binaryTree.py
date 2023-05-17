@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass(slots=True)
 class ERANK_DATA_KEYS:
   word_count = "word_count"
+  tag_occurrences = "tag_occurrences"
   average_searches = "average_searches"
   average_clicks = "average_clicks"
   average_ctr = "average_ctr"
