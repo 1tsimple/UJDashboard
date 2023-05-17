@@ -12,7 +12,7 @@ def get_keyword_data_container(
   etsy_competition: str,
   google_searches: str,
   google_cpc: str,
-  long_tail_keyword: str
+  long_tail: str
 ):
   return dbc.Alert(
     id={"type": "erank-keyword-data-card", "id": keyword},
@@ -27,7 +27,7 @@ def get_keyword_data_container(
       html.Div(className="erank-etsy-competition-wrapper", children=html.Span(etsy_competition)),
       html.Div(className="erank-google-searches-wrapper", children=html.Span(google_searches)),
       html.Div(className="erank-google-cpc-wrapper", children=html.Span(google_cpc)),
-      html.Div(className="erank-long-tail-keyword-wrapper", children=html.Span(long_tail_keyword)),
+      html.Div(className="erank-long-tail-keyword-wrapper", children=html.Span(long_tail)),
       html.Button(id={"type": "erank-keyword-data-card-close-button", "id": keyword}, type="button", className="btn-close")
     ]
   )

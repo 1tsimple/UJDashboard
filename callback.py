@@ -280,7 +280,7 @@ class CallbackManager():
           etsy_competition=_data["etsy_competition"],
           google_searches=_data["google_searches"],
           google_cpc=_data["google_cpc"],
-          long_tail_keyword=_data["long_tail_keyword"]
+          long_tail=_data["long_tail"]
         )
         for keyword, _data in data.items()
       ]
