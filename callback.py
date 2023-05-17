@@ -201,8 +201,8 @@ class CallbackManager():
     @self.app.callback(
       Output("erank-keyword-data-filtered", "data"),
       Input("erank-keyword-data-raw", "data"),
-      Input("min-character-count", "value"),
-      Input("max-character-count", "value"),
+      Input("min-word-count", "value"),
+      Input("max-word-count", "value"),
       Input("min-tag-occurrences", "value"),
       Input("max-tag-occurrences", "value"),
       Input("min-average-searches", "value"),
@@ -221,7 +221,7 @@ class CallbackManager():
     )
     def callback(
       data: dict[str, dict[str, dict[str, str | int | float | None]]],
-      min_character_count: int|None, max_character_count: int|None,
+      min_word_count: int|None, max_word_count: int|None,
       min_tag_occurrences: int|None, max_tag_occurrences: int|None,
       min_average_searches: int|None, max_average_searches: int|None,
       min_average_clicks: int|None, max_average_clicks: int|None,
@@ -232,7 +232,7 @@ class CallbackManager():
     ):
       all_data = data["keyword-research-data"] | data["keyword-tool-data"]
       __filter = {
-        ERANK_DATA_KEYS.word_count: (min_character_count, max_character_count),
+        ERANK_DATA_KEYS.word_count: (min_word_count, max_word_count),
         ERANK_DATA_KEYS.tag_occurrences: (min_tag_occurrences, max_tag_occurrences),
         ERANK_DATA_KEYS.average_searches: (min_average_searches, max_average_searches),
         ERANK_DATA_KEYS.average_clicks: (min_average_clicks, max_average_clicks),

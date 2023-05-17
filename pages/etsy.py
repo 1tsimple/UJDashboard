@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 dash.register_page(__name__)
 
 get_filters = lambda : [div for div in __get_filters(
-  ids=("character-count", "tag-occurrences", "average-searches", "average-clicks", "average-ctr", "etsy-competition", "google-searches", "google-cpc"),
+  ids=("word-count", "tag-occurrences", "average-searches", "average-clicks", "average-ctr", "etsy-competition", "google-searches", "google-cpc"),
   types=("number", "number", "number", "number", "number", "number", "number", "number"),
   mins=(0, 0, 0, 0, 0, 0, 0, 0),
   steps=(1, 1, 100, 100, 1, 1000, 1000, 1)
