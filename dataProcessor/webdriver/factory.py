@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup, Tag
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 
 from utils.binaryTree import ErankNode, ERANK_DATA_KEYS
 
@@ -89,17 +89,20 @@ class WebdriverController(ABC):
   
   def get_keyword_data(self, keyword) -> dict[str, list[list[str]]]: ...
 
+from pydantic import BaseModel, validator
+from typing import Optional, Literal
+
 class ErankKeywordData(BaseModel):
   __slots__ = "keyword", "word_count", "character_count", "tag_occurrences", "average_searches", "average_clicks", "average_ctr", "average_csi", "etsy_competition", "google_searches", "google_cpc", "google_competition", "long_tail_keyword"
-  
+
   keyword: str
-  word_count: int
-  character_count: int
+  word_count: int = -1
+  character_count: int = -1
   tag_occurrences: Optional[int]
   average_searches: Optional[int]
   average_clicks: Optional[int]
-  average_ctr: Optional[int]
-  average_csi: Optional[int]
+  average_ctr: Optional[float] = -1.0
+  average_csi: Optional[float] = -1.0
   etsy_competition: Optional[int]
   google_searches: Optional[int]
   google_cpc: Optional[float]
@@ -107,34 +110,34 @@ class ErankKeywordData(BaseModel):
   long_tail_keyword: Literal["Yes", "Maybe", "No"]
   
   @validator("word_count", always=True)
-  def calculate_word_count(cls, word_count, values):
-    keyword = values.get("keyword")
+  def calculate_word_count(cls, word_count):
+    keyword = cls.keyword
     return len(keyword.split(" "))
-  
+
   @validator("character_count", always=True)
-  def calculate_character_count(cls, character_count, values):
-    keyword = values.get("keyword")
+  def calculate_character_count(cls, character_count):
+    keyword = cls.keyword
     return len(keyword)
-  
+
   @validator("average_ctr", always=True)
-  def calculate_average_ctr(cls, average_ctr, values):
-    average_searches = values.get("average_searches")
-    average_clicks = values.get("average_clicks")
+  def calculate_average_ctr(cls, average_ctr):
+    average_searches = cls.average_searches
+    average_clicks = cls.average_clicks
     if average_clicks is not None and average_searches is not None and average_searches != 0:
       return (average_clicks / average_searches) * 100
     return None
   
   @validator("average_csi", always=True)
-  def calculate_average_csi(cls, average_csi, values):
-    average_searches = values.get("average_searches")
-    average_clicks = values.get("average_clicks")
-    etsy_competition = values.get("etsy_competition")
+  def calculate_average_csi(cls, average_csi):
+    average_searches = cls.average_searches
+    average_clicks = cls.average_clicks
+    etsy_competition = cls.etsy_competition
     if average_clicks is not None and average_searches is not None and etsy_competition is not None and average_searches != 0:
-      return (average_clicks / average_searches*average_searches) * etsy_competition
+      return (average_clicks / (average_searches * average_searches)) * etsy_competition
     return None
-  
+
   @validator("average_searches", "average_clicks", "etsy_competition", "google_searches", "google_cpc", "google_competition", pre=True)
-  def validate_field(cls, field_value, values):
+  def validate_field(cls, field_value):
     if field_value in ("", "Unknown", "< 20"):
       return None
     if "%" in field_value:
@@ -179,9 +182,6 @@ class ErankKeywordScrapper(WebdriverController):
     keyword_research_data = self.__extract_keyword_research_data(keyword)
     keyword_tool_data = self.__extract_keyword_tool_data(keyword)
     
-    from pprint import pprint
-    pprint(keyword_tool_data)
-    
     return {"keyword-tool-data": keyword_tool_data, "keyword-research-data": keyword_research_data}
   
   def __extract_keyword_research_data(self, keyword: str):
@@ -189,21 +189,22 @@ class ErankKeywordScrapper(WebdriverController):
     soup = BeautifulSoup(self.__get_page_html(keyword_research_url), "lxml")
     tbody: Tag = soup.find("table").find("tbody") # type: ignore
     rows: list[Tag] = tbody.find_all("tr") # type: ignore
-    data: list[list[str]] = list(map(lambda row: list(map(lambda x: x.text.lstrip().rstrip(), row.find_all("td"))), rows))
-    clean_data = {}
-    for row in data:
-      clean_data[row[0]] = {
-        ERANK_DATA_KEYS.word_count: len(row[0].split(" ")),
-        ERANK_DATA_KEYS.tag_occurrences: None,
-        ERANK_DATA_KEYS.average_searches: None if row[4] == "" or row[4] == "Unknown" else int(row[4].replace(",", "").replace("< 2", "")),
-        ERANK_DATA_KEYS.average_clicks: None if row[5] == "" or row[5] == "Unknown" else int(row[5].replace(",", "").replace("< 2", "")),
-        ERANK_DATA_KEYS.average_ctr: None if row[6].replace("%", "") == "" or row[6] == "Unknown" else int(row[6].replace("%", "").replace("< 2", "")),
-        ERANK_DATA_KEYS.etsy_competition: None if row[7] == "" or row[7] == "Unknown" else int(row[7].replace(",", "").replace("< 2", "")),
-        ERANK_DATA_KEYS.google_searches: None if row[8] == "" or row[8] == "Unknown" else int(row[8].replace(",", "").replace("< 2", "")),
-        ERANK_DATA_KEYS.google_cpc: None if row[9] == "" or row[9] == "Unknown" else float(row[9]),
-        ERANK_DATA_KEYS.long_tail: row[11],
-      }
-    return clean_data
+    data: list[list[Any]] = list(map(lambda row: list(map(lambda x: x.text.lstrip().rstrip(), row.find_all("td"))), rows))
+    
+    return [
+      ErankKeywordData( 
+        keyword = row[0],
+        tag_occurrences = None,
+        average_searches = row[4],
+        average_clicks = row[5],
+        etsy_competition = row[7],
+        google_searches = row[8],
+        google_cpc = row[9],
+        google_competition = row[10],
+        long_tail_keyword = row[11]
+      ).dict()
+      for row in data
+    ]
   
   def __get_page_html(self, url: str) -> str:
     return self.driver.execute_script(f"""
