@@ -4,7 +4,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 import logging
 import json
 
-from typing import Self, Literal, Any
+from typing import Self, Literal, Any, Optional
 from abc import ABC, abstractmethod
 
 from selenium.webdriver import Remote
@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup, Tag
+from pydantic import BaseModel, validator
 
 from utils.binaryTree import ErankNode, ERANK_DATA_KEYS
 
@@ -87,6 +88,60 @@ class WebdriverController(ABC):
   def search_keyword_data(self, keyword: str): ...
   
   def get_keyword_data(self, keyword) -> dict[str, list[list[str]]]: ...
+
+class ErankKeywordData(BaseModel):
+  __slots__ = "keyword", "word_count", "character_count", "tag_occurrences", "average_searches", "average_clicks", "average_ctr", "average_csi", "etsy_competition", "google_searches", "google_cpc", "google_competition", "long_tail_keyword"
+  
+  keyword: str
+  word_count: int
+  character_count: int
+  tag_occurrences: Optional[int]
+  average_searches: Optional[int]
+  average_clicks: Optional[int]
+  average_ctr: Optional[int]
+  average_csi: Optional[int]
+  etsy_competition: Optional[int]
+  google_searches: Optional[int]
+  google_cpc: Optional[float]
+  google_competition: Optional[float]
+  long_tail_keyword: Literal["Yes", "Maybe", "No"]
+  
+  @validator("word_count", always=True)
+  def calculate_word_count(cls, word_count, values):
+    keyword = values.get("keyword")
+    return len(keyword.split(" "))
+  
+  @validator("character_count", always=True)
+  def calculate_character_count(cls, character_count, values):
+    keyword = values.get("keyword")
+    return len(keyword)
+  
+  @validator("average_ctr", always=True)
+  def calculate_average_ctr(cls, average_ctr, values):
+    average_searches = values.get("average_searches")
+    average_clicks = values.get("average_clicks")
+    if average_clicks is not None and average_searches is not None and average_searches != 0:
+      return (average_clicks / average_searches) * 100
+    return None
+  
+  @validator("average_csi", always=True)
+  def calculate_average_csi(cls, average_csi, values):
+    average_searches = values.get("average_searches")
+    average_clicks = values.get("average_clicks")
+    etsy_competition = values.get("etsy_competition")
+    if average_clicks is not None and average_searches is not None and etsy_competition is not None and average_searches != 0:
+      return (average_clicks / average_searches*average_searches) * etsy_competition
+    return None
+  
+  @validator("average_searches", "average_clicks", "etsy_competition", "google_searches", "google_cpc", "google_competition", pre=True)
+  def validate_field(cls, field_value, values):
+    if field_value in ("", "Unknown", "< 20"):
+      return None
+    if "%" in field_value:
+      field_value = field_value.replace("%", "")
+    if "," in field_value:
+      field_value = field_value.replace(",", "")
+    return field_value
 
 class ErankKeywordScrapper(WebdriverController):
   __slots__ = tuple()
