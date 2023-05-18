@@ -14,7 +14,7 @@ from dataProcessor.webdriver.manager import DriverControllerManager
 from dataProcessor.webdriver.factory import WebdriverControllerFactory
 
 from components.erankKeyword import get_keyword_data_container
-from utils.binaryTree import ERANK_DATA_KEYS
+from utils.binaryTree import ERANK_DATA_KEYS, ErankNode
 
 class FilterState(Enum):
   VISIBLE = {
@@ -251,7 +251,7 @@ class CallbackManager():
       for filter_key, value in data.items():
         if value is None:
           continue
-        if filter_key == "long_tail_keyword":
+        if filter_key == ERANK_DATA_KEYS.long_tail:
           if __filter[filter_key] is not None and value != __filter[filter_key]:
             del filtered[keyword]
             break
@@ -268,19 +268,21 @@ class CallbackManager():
       Input("erank-keyword-data-filtered", "data"),
       prevent_initial_call=True
     )
-    def callback(data):
-      return [
-        get_keyword_data_container(
-          keyword=keyword,
-          character_count=_data["character_count"],
-          tag_occurrences=_data["tag_occurrences"],
-          average_searches=_data["average_searches"],
-          average_clicks=_data["average_clicks"],
-          average_ctr=_data["average_ctr"],
-          etsy_competition=_data["etsy_competition"],
-          google_searches=_data["google_searches"],
-          google_cpc=_data["google_cpc"],
-          long_tail=_data["long_tail"]
-        )
-        for keyword, _data in data.items()
-      ]
+    def callback(data: dict[str, dict[str, str|int|float|None]]):
+      gen = iter(data)
+      first = next(gen)
+      root = ErankNode(first, data[first], ERANK_DATA_KEYS.average_searches)
+      [root.insert(i, data[i]) for i in gen]
+      
+      return list(map(lambda x: get_keyword_data_container(
+        keyword=x["keyword"],
+        word_count=str(x[ERANK_DATA_KEYS.word_count]),
+        tag_occurrences=str(x[ERANK_DATA_KEYS.tag_occurrences]),
+        average_searches=str(x[ERANK_DATA_KEYS.average_searches]),
+        average_clicks=str(x[ERANK_DATA_KEYS.average_clicks]),
+        average_ctr=str(x[ERANK_DATA_KEYS.average_ctr]),
+        etsy_competition=str(x[ERANK_DATA_KEYS.etsy_competition]),
+        google_searches=str(x[ERANK_DATA_KEYS.google_searches]),
+        google_cpc=str(x[ERANK_DATA_KEYS.google_cpc]),
+        long_tail=str(x[ERANK_DATA_KEYS.long_tail])
+      ), root.traverse()))

@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 
 def get_keyword_data_container(
   keyword: str,
-  character_count: str,
+  word_count: str,
   tag_occurrences: str,
   average_searches: str,
   average_clicks: str,
@@ -19,7 +19,7 @@ def get_keyword_data_container(
     className="erank-keyword-data-card",
     children=[
       html.Div(className="erank-keyword-wrapper", children=html.Span(keyword)),
-      html.Div(className="erank-character-count-wrapper", children=html.Span(character_count)),
+      html.Div(className="erank-word-count-wrapper", children=html.Span(word_count)),
       html.Div(className="erank-tag-occurrences-wrapper", children=html.Span(tag_occurrences)),
       html.Div(className="erank-average-searches-wrapper", children=html.Span(average_searches)),
       html.Div(className="erank-average-clicks-wrapper", children=html.Span(average_clicks)),

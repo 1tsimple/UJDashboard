@@ -2,17 +2,11 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 import logging
-import asyncio
-import threading
-import pyperclip
-import io
-import csv
 import json
 
 from typing import Self, Literal, Any
 from abc import ABC, abstractmethod
 
-from selenium import webdriver
 from selenium.webdriver import Remote
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchWindowException, NoSuchElementException
@@ -20,13 +14,11 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.remote.webelement import WebElement
 from bs4 import BeautifulSoup, Tag
+
 from utils.binaryTree import ErankNode, ERANK_DATA_KEYS
 
-
-import time
+# TODO: add average searches / competition ratio
 
 DEFAULT_DRIVER_OPTIONS = [
   "--disable-web-security",

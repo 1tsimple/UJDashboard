@@ -8,6 +8,7 @@ class ERANK_DATA_KEYS:
   average_searches = "average_searches"
   average_clicks = "average_clicks"
   average_ctr = "average_ctr"
+  average_csi = "average_csi"
   etsy_competition = "etsy_competition"
   google_searches = "google_searches"
   google_cpc = "google_cpc"
@@ -16,7 +17,7 @@ class ERANK_DATA_KEYS:
 class ErankNode:
   __slots__ = "left", "right", "key", "value", "data", "_sorted_by"
   
-  def __init__(self, key: str, value: dict[str, Any], sort_by: ERANK_DATA_KEYS) -> None:
+  def __init__(self, key: str, value: dict[str, Any], sort_by: str) -> None:
     self.left = None
     self.right = None
     self.key = key
