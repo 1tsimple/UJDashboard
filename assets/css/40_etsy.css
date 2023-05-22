@@ -77,6 +77,7 @@
 #erank-filters > div {
   width: 22%;
   margin: 10px 1.5%;
+  position: relative;
 }
 
 #erank-filters > div > span {
@@ -87,12 +88,27 @@
   font-weight: 500;
 }
 
-#erank-filters > div > div > input:last-child {
+#erank-filters > div:nth-child(-n + 9) > div > input:last-child {
   margin-left: 5%;
+}
+
+#erank-filters > div:last-child #long-tail-keyword-filter {
+  height: 31px;
+}
+
+#erank-filters > div:last-child #long-tail-keyword {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
 }
 
 #erank-filters .mix-max-filter {
   display: flex;
+}
+
+#erank-filters i.fa-regular.fa-circle-question.fa-2xs {
+  position: absolute;
+  top: 3px;
 }
 
 #erank-data-wrapper ul.nav.nav-tabs {

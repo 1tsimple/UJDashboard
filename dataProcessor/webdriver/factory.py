@@ -184,7 +184,7 @@ class ErankKeywordScrapper(WebdriverController):
     keyword_tool_data = self.__extract_keyword_tool_data(keyword)
     
     from pprint import pprint
-    pprint(keyword_research_data)
+    pprint(keyword_tool_data)
     
     return {"keyword-tool-data": keyword_tool_data, "keyword-research-data": keyword_research_data}
   

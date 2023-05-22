@@ -2,40 +2,83 @@ import dash
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 
+from typing import Any
+from itertools import chain
+
 
 dash.register_page(__name__)
 
-get_filters = lambda : [div for div in __get_filters(
-  ids=("word-count", "tag-occurrences", "average-searches", "average-clicks", "average-ctr", "etsy-competition", "google-searches", "google-cpc"),
-  types=("number", "number", "number", "number", "number", "number", "number", "number"),
-  mins=(0, 0, 0, 0, 0, 0, 0, 0),
-  steps=(1, 1, 100, 100, 1, 1000, 1000, 1)
-)]
-
-def __get_filters(ids: tuple[str, ...], types: tuple[str, ...], mins: tuple[int, ...], steps: tuple[int, ...]):
-  for id_, type_, min_, step in zip(ids, types, mins, steps):
-    yield html.Div(id=f"{id_}-container", children=[
-      html.Span(f"{id_.replace('-', ' ')}"),
-      html.Div(id=f"{id_}-filter", className="mix-max-filter", children=[
-        dbc.Input(
-          id=f"min-{id_}",
-          type=type_,
-          min=min_,
-          step=step,
-          size="sm",
-          placeholder="min"
-        ),
-        dbc.Input(
-          id=f"max-{id_}",
-          type=type_,
-          min=min_,
-          step=step,
-          size="sm",
-          placeholder="max"
-        )
-      ])
+def get_min_max_filter(id_, min_ = 0, step = 1):
+  return html.Div(id=f"{id_}-container", children=[
+    html.Span(f"{id_.replace('-', ' ')}"),
+    html.I(id=f"{id_}-tooltip", className="fa-regular fa-circle-question fa-2xs"),
+    html.Div(id=f"{id_}-filter", className="mix-max-filter", children=[
+      dbc.Input(
+        id=f"min-{id_}",
+        type="number",
+        min=min_,
+        step=step,
+        size="sm",
+        placeholder="min"
+      ),
+      dbc.Input(
+        id=f"max-{id_}",
+        type="number",
+        min=min_,
+        step=step,
+        size="sm",
+        placeholder="max"
+      )
     ])
-  yield html.Div(id="longtail-filter")
+  ])
+
+def get_input_filter(id_):
+  return html.Div(id=f"{id_}-container", children=[
+    html.Span(f"{id_.replace('-', ' ')}"),
+    html.I(id=f"{id_}-tooltip", className="fa-regular fa-circle-question fa-2xs"),
+    html.Div(id=f"{id_}-filter", className="input-filter", children=[
+      dbc.Input(
+        id=id_,
+        type="text",
+        size="sm",
+      )
+    ])
+  ])
+
+def get_checklist_filter(id_, options: list[tuple[str, Any]], inline = False):
+  return html.Div(id=f"{id_}-container", children=[
+    html.Span(f"{id_.replace('-', ' ')}"),
+    html.I(id=f"{id_}-tooltip", className="fa-regular fa-circle-question fa-2xs"),
+    html.Div(id=f"{id_}-filter", className="checklist-filter", children=[
+      dbc.Checklist(
+        id=id_,
+        options=[{"label": option[0], "value": option[1]} for option in options],
+        value=[option[1] for option in options],
+        inline=inline
+      ),
+    ])
+  ])
+
+min_max_filters = [
+  get_min_max_filter(id_, min_, step_)
+  for id_, min_, step_ in zip(
+    ("word-count", "etsy-competition", "google-searches", "google-cpc", "average-searches", "average-clicks", "average-ctr", "average-csi", "tag-occurrences"),
+    (0, 0, 0, 0, 0, 0, 0, 0, 0),
+    (1, 1, 1, 1, 1, 1, 1, 1, 1)
+  )
+]
+
+input_filters = [get_input_filter(id_) for id_ in ("include-keywords", "exclude-keywords")]
+checklist_filters = [
+  get_checklist_filter(id_, options, inline)
+  for id_, options, inline in zip(
+    ("long-tail-keyword", ),
+    ([("Yes", "Yes"), ("No", "No"), ("Maybe", "Maybe")], ),
+    (True, )
+  )
+]
+
+all_filters = min_max_filters + input_filters + checklist_filters
 
 layout = html.Div(id="content-container", children=[
   html.Div(id="content-container-inner", children=[
@@ -77,7 +120,7 @@ layout = html.Div(id="content-container", children=[
       ])
     ]),
     html.Div(id="erank-filter-container", children=[
-      html.Div(id="erank-filters", children=get_filters())
+      html.Div(id="erank-filters", children=all_filters)
     ]),
     html.Div(id="erank-data-wrapper", children=[
       dcc.Store("erank-keyword-data-raw", storage_type="session"),
