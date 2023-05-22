@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 
 def get_keyword_data_container(
   keyword: str,
-  character_count: str,
+  word_count: str,
   tag_occurrences: str,
   average_searches: str,
   average_clicks: str,
@@ -12,14 +12,14 @@ def get_keyword_data_container(
   etsy_competition: str,
   google_searches: str,
   google_cpc: str,
-  long_tail_keyword: str
+  long_tail: str
 ):
   return dbc.Alert(
     id={"type": "erank-keyword-data-card", "id": keyword},
     className="erank-keyword-data-card",
     children=[
       html.Div(className="erank-keyword-wrapper", children=html.Span(keyword)),
-      html.Div(className="erank-character-count-wrapper", children=html.Span(character_count)),
+      html.Div(className="erank-word-count-wrapper", children=html.Span(word_count)),
       html.Div(className="erank-tag-occurrences-wrapper", children=html.Span(tag_occurrences)),
       html.Div(className="erank-average-searches-wrapper", children=html.Span(average_searches)),
       html.Div(className="erank-average-clicks-wrapper", children=html.Span(average_clicks)),
@@ -27,7 +27,7 @@ def get_keyword_data_container(
       html.Div(className="erank-etsy-competition-wrapper", children=html.Span(etsy_competition)),
       html.Div(className="erank-google-searches-wrapper", children=html.Span(google_searches)),
       html.Div(className="erank-google-cpc-wrapper", children=html.Span(google_cpc)),
-      html.Div(className="erank-long-tail-keyword-wrapper", children=html.Span(long_tail_keyword)),
+      html.Div(className="erank-long-tail-keyword-wrapper", children=html.Span(long_tail)),
       html.Button(id={"type": "erank-keyword-data-card-close-button", "id": keyword}, type="button", className="btn-close")
     ]
   )

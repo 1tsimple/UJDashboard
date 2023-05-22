@@ -14,6 +14,7 @@ from dataProcessor.webdriver.manager import DriverControllerManager
 from dataProcessor.webdriver.factory import WebdriverControllerFactory
 
 from components.erankKeyword import get_keyword_data_container
+from utils.binaryTree import ERANK_DATA_KEYS, ErankNode
 
 class FilterState(Enum):
   VISIBLE = {
@@ -193,16 +194,15 @@ class CallbackManager():
     def callback(click: int, keyword: str, submit: int, session_id: str):
       crawler = self.driver_manager.driver_controllers.get(session_id)
       if crawler is None:
-        return PreventUpdate()
-      crawler.search_keyword_data(keyword)
-      return crawler.get_keyword_data()
+        raise PreventUpdate
+      return crawler.get_keyword_data(keyword)
   
   def filter_keyword_data(self) -> None:
     @self.app.callback(
       Output("erank-keyword-data-filtered", "data"),
       Input("erank-keyword-data-raw", "data"),
-      Input("min-character-count", "value"),
-      Input("max-character-count", "value"),
+      Input("min-word-count", "value"),
+      Input("max-word-count", "value"),
       Input("min-tag-occurrences", "value"),
       Input("max-tag-occurrences", "value"),
       Input("min-average-searches", "value"),
@@ -220,8 +220,8 @@ class CallbackManager():
       prevent_initial_call=True
     )
     def callback(
-      data: dict[str, list[list[str]]],
-      min_character_count: int|None, max_character_count: int|None,
+      data: dict[str, dict[str, dict[str, str | int | float | None]]],
+      min_word_count: int|None, max_word_count: int|None,
       min_tag_occurrences: int|None, max_tag_occurrences: int|None,
       min_average_searches: int|None, max_average_searches: int|None,
       min_average_clicks: int|None, max_average_clicks: int|None,
@@ -230,75 +230,34 @@ class CallbackManager():
       min_google_searches: int|None, max_google_searches: int|None,
       min_google_cpc: int|None, max_google_cpc: int|None
     ):
-      data_research = list(map(lambda x: self.__fix_dtypes(x, "research"), data["keyword-research-data"]))
-      data_tool = list(map(lambda x: self.__fix_dtypes(x, "tool"), data["keyword-tool-data"]))
-      
-      data_clean = {}
-      for kw_data in data_research + data_tool:
-        keyword = next(iter(kw_data))
-        if keyword not in data_clean.keys():
-          data_clean |= kw_data
-        else:
-          data_clean[keyword] |= kw_data[keyword]
+      all_data = data["keyword-research-data"] | data["keyword-tool-data"]
       __filter = {
-        "character_count": (min_character_count, max_character_count),
-        "tag_occurrences": (min_tag_occurrences, max_tag_occurrences),
-        "average_searches": (min_average_searches, max_average_searches),
-        "average_clicks": (min_average_clicks, max_average_clicks),
-        "average_ctr": (min_average_ctr, max_average_ctr),
-        "etsy_competition": (min_etsy_competition, max_etsy_competition),
-        "google_searches": (min_google_searches, max_google_searches),
-        "google_cpc": (min_google_cpc, max_google_cpc),
-        "long_tail_keyword": None
+        ERANK_DATA_KEYS.word_count: (min_word_count, max_word_count),
+        ERANK_DATA_KEYS.tag_occurrences: (min_tag_occurrences, max_tag_occurrences),
+        ERANK_DATA_KEYS.average_searches: (min_average_searches, max_average_searches),
+        ERANK_DATA_KEYS.average_clicks: (min_average_clicks, max_average_clicks),
+        ERANK_DATA_KEYS.average_ctr: (min_average_ctr, max_average_ctr),
+        ERANK_DATA_KEYS.etsy_competition: (min_etsy_competition, max_etsy_competition),
+        ERANK_DATA_KEYS.google_searches: (min_google_searches, max_google_searches),
+        ERANK_DATA_KEYS.google_cpc: (min_google_cpc, max_google_cpc),
+        ERANK_DATA_KEYS.long_tail: None
       }
-      return self.__filter_data(data_clean, __filter)
+      return self.__filter_data(all_data, __filter)
   
   @staticmethod
-  def __fix_dtypes(__list: list[str], __type: Literal["tool", "research"]) -> dict[str, dict[str, str|int|float|None]]:
-    _list = list(map(lambda x: "" if x == "Unknown" else x.replace(",", "").replace("%", ""), __list))
-    if __type == "research":
-      return {
-        _list[0]: {
-          "character_count": str_to_int(_list[1]),
-          "tag_occurrences": None,
-          "average_searches": str_to_int(_list[2]),
-          "average_clicks": str_to_int(_list[3]),
-          "average_ctr": str_to_int(_list[4]),
-          "etsy_competition": str_to_int(_list[5]),
-          "google_searches": str_to_int(_list[6]),
-          "google_cpc": str_to_int(_list[7]),
-          "long_tail_keyword": _list[9]
-        }
-      }
-    else:
-      return {
-        _list[0]: {
-          "character_count": len(_list[0]),
-          "tag_occurrences": str_to_int(_list[1]),
-          "average_searches": str_to_int(_list[2]),
-          "average_clicks": str_to_int(_list[3]),
-          "average_ctr": str_to_int(_list[4]),
-          "etsy_competition": str_to_int(_list[5]),
-          "google_searches": str_to_int(_list[6]),
-          "google_cpc": None,
-          "long_tail_keyword": _list[7]
-        }
-      }
-  
-  @staticmethod
-  def __filter_data(__data: dict[str, dict[str, int|float|None]], __filter: dict[str, tuple[int|None, int|None]]) -> dict[str, dict[str, str|int|float|None]]:
+  def __filter_data(__data: dict[str, dict[str, str|int|float|None]], __filter: dict[str, tuple[int|None, int|None]]) -> dict[str, dict[str, str|int|float|None]]:
     filtered = __data.copy()
     for keyword, data in __data.items():
       for filter_key, value in data.items():
         if value is None:
           continue
-        if filter_key == "long_tail_keyword":
+        if filter_key == ERANK_DATA_KEYS.long_tail:
           if __filter[filter_key] is not None and value != __filter[filter_key]:
             del filtered[keyword]
             break
           continue
         _min, _max = __filter[filter_key]
-        if (_min is not None and _min >= value) or (_max is not None and _max <= value):
+        if (_min is not None and _min >= value) or (_max is not None and _max <= value): # type: ignore
           del filtered[keyword]
           break
     return filtered
@@ -309,19 +268,21 @@ class CallbackManager():
       Input("erank-keyword-data-filtered", "data"),
       prevent_initial_call=True
     )
-    def callback(data):
-      return [
-        get_keyword_data_container(
-          keyword=keyword,
-          character_count=_data["character_count"],
-          tag_occurrences=_data["tag_occurrences"],
-          average_searches=_data["average_searches"],
-          average_clicks=_data["average_clicks"],
-          average_ctr=_data["average_ctr"],
-          etsy_competition=_data["etsy_competition"],
-          google_searches=_data["google_searches"],
-          google_cpc=_data["google_cpc"],
-          long_tail_keyword=_data["long_tail_keyword"]
-        )
-        for keyword, _data in data.items()
-      ]
+    def callback(data: dict[str, dict[str, str|int|float|None]]):
+      gen = iter(data)
+      first = next(gen)
+      root = ErankNode(first, data[first], ERANK_DATA_KEYS.average_searches)
+      [root.insert(i, data[i]) for i in gen]
+      
+      return list(map(lambda x: get_keyword_data_container(
+        keyword=x["keyword"],
+        word_count=str(x[ERANK_DATA_KEYS.word_count]),
+        tag_occurrences=str(x[ERANK_DATA_KEYS.tag_occurrences]),
+        average_searches=str(x[ERANK_DATA_KEYS.average_searches]),
+        average_clicks=str(x[ERANK_DATA_KEYS.average_clicks]),
+        average_ctr=str(x[ERANK_DATA_KEYS.average_ctr]),
+        etsy_competition=str(x[ERANK_DATA_KEYS.etsy_competition]),
+        google_searches=str(x[ERANK_DATA_KEYS.google_searches]),
+        google_cpc=str(x[ERANK_DATA_KEYS.google_cpc]),
+        long_tail=str(x[ERANK_DATA_KEYS.long_tail])
+      ), root.traverse()))

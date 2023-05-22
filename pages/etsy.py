@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 dash.register_page(__name__)
 
 get_filters = lambda : [div for div in __get_filters(
-  ids=("character-count", "tag-occurrences", "average-searches", "average-clicks", "average-ctr", "etsy-competition", "google-searches", "google-cpc"),
+  ids=("word-count", "tag-occurrences", "average-searches", "average-clicks", "average-ctr", "etsy-competition", "google-searches", "google-cpc"),
   types=("number", "number", "number", "number", "number", "number", "number", "number"),
   mins=(0, 0, 0, 0, 0, 0, 0, 0),
   steps=(1, 1, 100, 100, 1, 1000, 1000, 1)
@@ -35,9 +35,7 @@ def __get_filters(ids: tuple[str, ...], types: tuple[str, ...], mins: tuple[int,
         )
       ])
     ])
-  yield html.Div(id="longtail-filter", children=[
-    
-  ])
+  yield html.Div(id="longtail-filter")
 
 layout = html.Div(id="content-container", children=[
   html.Div(id="content-container-inner", children=[
@@ -75,7 +73,7 @@ layout = html.Div(id="content-container", children=[
           color="grey",
           outline=True
         ),
-        dcc.Store(id="erank-crawler-session-id", storage_type="session")
+        dcc.Store(id="erank-crawler-session-id", storage_type="local")
       ])
     ]),
     html.Div(id="erank-filter-container", children=[
@@ -84,8 +82,38 @@ layout = html.Div(id="content-container", children=[
     html.Div(id="erank-data-wrapper", children=[
       dcc.Store("erank-keyword-data-raw", storage_type="session"),
       dcc.Store("erank-keyword-data-filtered", storage_type="session"),
-      dcc.Loading(id="erank-data-container"),
+      html.Div(children=[
+        html.Ul(className="nav nav-tabs", children=[
+          html.Div(className="nav-item", children=[
+            html.Button(className="nav-link", children=[
+              html.Span(style={"color": "var(--bs-nav-tabs-link-active-color)"}, children=col_name),
+              html.I(style={"color": "var(--bs-nav-tabs-link-active-color)"})
+            ])
+          ])
+          for col_name in ("keywords", "tag occurrences", "average searches", "average clicks", "average ctr", "average csr", "etsy competition", "google searches", "google cpc", "long tail keyword")
+        ]),
+        dcc.Loading(id="erank-data-container", children=[
+          dbc.Alert(
+            id={"type": "erank-keyword-data-card", "id": "keyword"},
+            className="erank-keyword-data-card",
+            children=[
+              html.Div(className="erank-keyword-wrapper", children=html.Span("tshirt")),
+              html.Div(className="erank-tag-occurrences-wrapper", children=html.Span("1")),
+              html.Div(className="erank-average-searches-wrapper", children=html.Span("76437")),
+              html.Div(className="erank-average-clicks-wrapper", children=html.Span("78288")),
+              html.Div(className="erank-average-ctr-wrapper", children=html.Span("102")),
+              html.Div(className="erank-average-csi-wrapper", children=html.Span("0")),
+              html.Div(className="erank-etsy-competition-wrapper", children=html.Span("0")),
+              html.Div(className="erank-google-searches-wrapper", children=html.Span("0")),
+              html.Div(className="erank-google-cpc-wrapper", children=html.Span("0")),
+              html.Div(className="erank-long-tail-keyword-wrapper", children=html.Span("No")),
+              html.Button(id={"type": "erank-keyword-data-card-close-button", "id": "tshirt"}, type="button", className="btn-close")
+            ]
+          )
+        ])
+      ]),
       html.Div(id="erank-data-container-removed", children=[
+        
       ]),
     ])
   ])

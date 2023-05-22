@@ -2,16 +2,11 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 import logging
-import asyncio
-import threading
-import pyperclip
-import io
-import csv
+import json
 
-from typing import Self, Literal
+from typing import Self, Literal, Any, Optional
 from abc import ABC, abstractmethod
 
-from selenium import webdriver
 from selenium.webdriver import Remote
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchWindowException, NoSuchElementException
@@ -19,8 +14,12 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.remote.webelement import WebElement
+from bs4 import BeautifulSoup, Tag
+from pydantic import BaseModel, validator, root_validator
+
+from utils.binaryTree import ErankNode, ERANK_DATA_KEYS
+
+# TODO: add average searches / competition ratio
 
 DEFAULT_DRIVER_OPTIONS = [
   "--disable-web-security",
@@ -88,7 +87,65 @@ class WebdriverController(ABC):
   
   def search_keyword_data(self, keyword: str): ...
   
-  def get_keyword_data(self) -> dict[str, list[list[str]]]: ...
+  def get_keyword_data(self, keyword) -> dict[str, list[list[str]]]: ...
+
+from pydantic import BaseModel, validator
+from typing import Optional, Literal
+
+class ErankKeywordData(BaseModel):
+  __slots__ = "keyword", "word_count", "character_count", "tag_occurrences", "average_searches", "average_clicks", "average_ctr", "average_csi", "etsy_competition", "google_searches", "google_cpc", "google_competition", "long_tail_keyword"
+
+  keyword: str
+  word_count: int = -1
+  character_count: int = -1
+  tag_occurrences: Optional[int]
+  average_searches: Optional[int]
+  average_clicks: Optional[int]
+  average_ctr: Optional[float] = -1.0
+  etsy_competition: Optional[int]
+  average_csi: Optional[float] = -1.0
+  google_searches: Optional[int]
+  google_cpc: Optional[float]
+  google_competition: Optional[float]
+  long_tail_keyword: Literal["Yes", "Maybe", "No"]
+  
+  @validator("word_count", always=True)
+  def calculate_word_count(cls, value, values):
+    keyword = values.get("keyword")
+    return len(keyword.split(" "))
+
+  @validator("character_count", always=True)
+  def calculate_character_count(cls, value, values):
+    keyword = values.get("keyword")
+    return len(keyword)
+  
+  @validator("average_searches", "average_clicks", "etsy_competition", "google_searches", "google_cpc", "google_competition", pre=True)
+  def validate_field(cls, value):
+    if isinstance(value, str):
+      if value in ("", "Unknown", "< 20"):
+        return None
+      if "%" in value:
+        value = value.replace("%", "")
+      if "," in value:
+        value = value.replace(",", "")
+    return value
+
+  @validator("average_ctr", always=True)
+  def calculate_average_ctr(cls, value, values):
+    average_searches = values.get("average_searches")
+    average_clicks = values.get("average_clicks")
+    if average_clicks is not None and average_searches is not None and average_searches != 0:
+      return (average_clicks / average_searches) * 100
+    return None
+  
+  @validator("average_csi", always=True)
+  def calculate_average_csi(cls, value, values):
+    average_searches = values.get("average_searches")
+    average_clicks = values.get("average_clicks")
+    etsy_competition = values.get("etsy_competition")
+    if average_clicks is not None and average_searches is not None and etsy_competition is not None and average_searches != 0:
+      return (average_clicks / (average_searches * average_searches)) * etsy_competition
+    return None
 
 class ErankKeywordScrapper(WebdriverController):
   __slots__ = tuple()
@@ -104,14 +161,12 @@ class ErankKeywordScrapper(WebdriverController):
     for option in DEFAULT_DRIVER_OPTIONS:
       self.options.add_argument(option)
     self.options.add_argument("start-maximized")
-    self.options.add_experimental_option("prefs", {"download.default_directory": os.path.abspath(os.path.join(SCRIPT_DIR, "storage/erank"))})
   
   def initialize(self) -> None:
     self.driver.get(self.URL)
-    self._log_in()
-    self._open_new_tab()
+    self.__log_in()
   
-  def _log_in(self) -> None:
+  def __log_in(self) -> None:
     log_in_link = self.wait.until(EC.visibility_of_element_located((By.LINK_TEXT, "Login")))
     log_in_link.click()
     
@@ -124,41 +179,91 @@ class ErankKeywordScrapper(WebdriverController):
     log_in_button = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//button[contains(text(),'Login')]")))
     log_in_button.click()
   
-  def _open_new_tab(self) -> None:
-    self.driver.execute_script("window.open('');")
-    self.driver.switch_to.window(self.driver.window_handles[-1])
-    self.driver.get(self.URL)
-  
-  def search_keyword_data(self, keyword: str) -> None:
-    self.driver.get(f'{self.URL}keyword-tool?keywords={keyword.replace(" ", "+")}&country=USA')
-    self.driver.switch_to.window(self.driver.window_handles[0])
-    self.driver.get(f'{self.URL}keyword-explorer?keywords={keyword.replace(" ", "+")}&country=USA&source=etsy')
-    self.driver.switch_to.window(self.driver.window_handles[-1])
-  
-  def get_keyword_data(self) -> dict[str, list[list[str]]]:
-    keyword_tool_data_raw = self.__get_page_data()
-    self.driver.switch_to.window(self.driver.window_handles[0])
-    keyword_research_data_raw = self.__get_page_data()
+  def get_keyword_data(self, keyword: str) -> dict[str, list[dict[str, Any]]]:
+    keyword_research_data = self.__extract_keyword_research_data(keyword)
+    keyword_tool_data = self.__extract_keyword_tool_data(keyword)
     
-    keyword_tool_data = list(map(lambda list_: list_[0:-1], keyword_tool_data_raw))
-    keyword_research_data = list(map(self.__clean_erank_search_data, keyword_research_data_raw))
+    from pprint import pprint
+    pprint(keyword_research_data)
+    
     return {"keyword-tool-data": keyword_tool_data, "keyword-research-data": keyword_research_data}
   
-  def __get_page_data(self):
-    export_button = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.kt-custom-dlbtn")))
-    export_button.click()
-    export_button.find_element(By.CSS_SELECTOR, ".dt-button.buttons-copy").click()
-    text = pyperclip.paste()
-    data = csv.reader(io.StringIO(text), delimiter="\t")
-    for _ in range(3):
-      next(data)
-    return data
+  def __extract_keyword_research_data(self, keyword: str) -> list[dict[str, Any]]:
+    keyword_research_url = f'{self.URL}keyword-explorer?keywords={keyword.replace(" ", "+")}&country=USA&source=etsy'
+    soup = BeautifulSoup(self.__get_page_html(keyword_research_url), "lxml")
+    tbody: Tag = soup.find("table").find("tbody") # type: ignore
+    rows: list[Tag] = tbody.find_all("tr") # type: ignore
+    data: list[list[Any]] = list(map(lambda row: list(map(lambda x: x.text.lstrip().rstrip(), row.find_all("td"))), rows))
+    
+    return [
+      ErankKeywordData( 
+        keyword = row[0],
+        tag_occurrences = None,
+        average_searches = row[4],
+        average_clicks = row[5],
+        etsy_competition = row[7],
+        google_searches = row[8],
+        google_cpc = row[9],
+        google_competition = row[10],
+        long_tail_keyword = row[11]
+      ).dict()
+      for row in data
+    ]
   
-  @staticmethod
-  def __clean_erank_search_data(__list: list[str]) -> list[str]:
-    keyword = __list.pop(0).lstrip("\xa0 ")
-    __list.insert(0, keyword)
-    return __list
+  def __get_page_html(self, url: str) -> str:
+    return self.driver.execute_script(f"""
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '{url}', false);
+      xhr.send(null);
+      return xhr.responseText;
+    """)
+  
+  def __extract_keyword_tool_data(self, keyword: str) -> list[dict[str, Any]]:
+    _json = self.__get_keyword_tool_data_json(keyword)
+    return [
+      ErankKeywordData( 
+        keyword = kw_data["keyword"],
+        tag_occurrences = kw_data["occurences"],
+        average_searches = kw_data["avg_searches"]["order_value"],
+        average_clicks = kw_data["avg_clicks"]["order_value"],
+        etsy_competition = kw_data["competition"]["value"],
+        google_searches = kw_data["google"]["avg_searches"],
+        google_cpc = kw_data["google"]["cpc"],
+        google_competition = kw_data["google"]["competition"],
+        long_tail_keyword = kw_data["longtail"]
+      ).dict()
+      for kw_data in _json["keyword_ideas"]["all"]
+    ]
+  
+  def __get_keyword_tool_data_json(self, keyword: str) -> dict[str, Any]:
+    return json.loads(self.driver.execute_script(
+      """
+        let url = 'https://erank.com/keyword-tool';
+        let data = {{
+          'processFunc': 'etsyCall',
+          'keyword': '{keyword}',
+          'member_id': 1178565,
+          'country': 'USA',
+          'sort_on': 'score'
+        }};
+        let headers = {{
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Referer': 'https://erank.com/keyword-tool?keywords={keyword_query}&country=USA',
+          'Origin': 'https://erank.com'
+        }};
+        let body = new URLSearchParams(data);
+        return fetch(url, {{
+          method: 'POST',
+          headers: headers,
+          body: body
+        }}).then(response => {{
+            if (!response.ok) {{
+              throw new Error(`HTTP error! status: ${{response.status}}`);
+            }}
+            return response.text();
+          }})
+      """.format(keyword=keyword, keyword_query=keyword.replace(" ", "+"))
+    ))
 
 class WebdriverControllerFactory:
   factories = {
