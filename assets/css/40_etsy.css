@@ -77,7 +77,6 @@
 #erank-filters > div {
   width: 22%;
   margin: 10px 1.5%;
-  position: relative;
 }
 
 #erank-filters > div > span {
@@ -106,9 +105,18 @@
   display: flex;
 }
 
+#erank-filters .tooltip-icon-wrapper {
+  position: relative;
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  margin: 0 0 4px 2px;
+}
+
 #erank-filters i.fa-regular.fa-circle-question.fa-2xs {
   position: absolute;
-  top: 3px;
+  top: 8px;
+  right: 3px;
 }
 
 #erank-data-wrapper ul.nav.nav-tabs {

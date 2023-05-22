@@ -8,10 +8,13 @@ from itertools import chain
 
 dash.register_page(__name__)
 
-def get_min_max_filter(id_, min_ = 0, step = 1):
+def get_min_max_filter(id_, min_ = 0, step = 1, tooltip: str | None = None):
   return html.Div(id=f"{id_}-container", children=[
     html.Span(f"{id_.replace('-', ' ')}"),
-    html.I(id=f"{id_}-tooltip", className="fa-regular fa-circle-question fa-2xs"),
+    html.Div(id=f"{id_}-tooltip-icon-wrapper", className="tooltip-icon-wrapper", children=[
+      html.I(id=f"{id_}-tooltip-icon", className="fa-regular fa-circle-question fa-2xs") if tooltip else html.I()
+    ]),
+    dbc.Tooltip(id=f"{id_}-tooltip", target=f"{id_}-tooltip-icon-wrapper", placement="bottom", children=tooltip),
     html.Div(id=f"{id_}-filter", className="mix-max-filter", children=[
       dbc.Input(
         id=f"min-{id_}",
@@ -32,10 +35,13 @@ def get_min_max_filter(id_, min_ = 0, step = 1):
     ])
   ])
 
-def get_input_filter(id_):
+def get_input_filter(id_, tooltip: str | None = None):
   return html.Div(id=f"{id_}-container", children=[
     html.Span(f"{id_.replace('-', ' ')}"),
-    html.I(id=f"{id_}-tooltip", className="fa-regular fa-circle-question fa-2xs"),
+    html.Div(id=f"{id_}-tooltip-icon-wrapper", className="tooltip-icon-wrapper", children=[
+      html.I(id=f"{id_}-tooltip-icon", className="fa-regular fa-circle-question fa-2xs") if tooltip else html.I()
+    ]),
+    dbc.Tooltip(id=f"{id_}-tooltip", target=f"{id_}-tooltip-icon-wrapper", placement="bottom", children=tooltip),
     html.Div(id=f"{id_}-filter", className="input-filter", children=[
       dbc.Input(
         id=id_,
@@ -45,10 +51,13 @@ def get_input_filter(id_):
     ])
   ])
 
-def get_checklist_filter(id_, options: list[tuple[str, Any]], inline = False):
+def get_checklist_filter(id_, options: list[tuple[str, Any]], inline = False, tooltip: str | None = None):
   return html.Div(id=f"{id_}-container", children=[
     html.Span(f"{id_.replace('-', ' ')}"),
-    html.I(id=f"{id_}-tooltip", className="fa-regular fa-circle-question fa-2xs"),
+    html.Div(id=f"{id_}-tooltip-icon-wrapper", className="tooltip-icon-wrapper", children=[
+      html.I(id=f"{id_}-tooltip-icon", className="fa-regular fa-circle-question fa-2xs") if tooltip else html.I()
+    ]),
+    dbc.Tooltip(id=f"{id_}-tooltip", target=f"{id_}-tooltip-icon-wrapper", placement="bottom", children=tooltip),
     html.Div(id=f"{id_}-filter", className="checklist-filter", children=[
       dbc.Checklist(
         id=id_,
@@ -60,21 +69,28 @@ def get_checklist_filter(id_, options: list[tuple[str, Any]], inline = False):
   ])
 
 min_max_filters = [
-  get_min_max_filter(id_, min_, step_)
-  for id_, min_, step_ in zip(
+  get_min_max_filter(id_, min_, step_, tooltip)
+  for id_, min_, step_, tooltip in zip(
     ("word-count", "etsy-competition", "google-searches", "google-cpc", "average-searches", "average-clicks", "average-ctr", "average-csi", "tag-occurrences"),
     (0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 1, 1, 1, 1, 1, 1, 1, 1)
+    (1, 1, 1, 1, 1, 1, 1, 1, 1),
+    (None, None, None, "(Cost-Per-Click) indicates how much advertisers are prepared to pay for the keyword", None, None, "(Click-Through Rate) The ratio of clicks to searches", "(Competition/Search Index) A measure for effectiveness and competitiveness of a listing, the lower the better", None)
   )
 ]
-
-input_filters = [get_input_filter(id_) for id_ in ("include-keywords", "exclude-keywords")]
+input_filters = [
+  get_input_filter(id_, tooltip)
+  for id_, tooltip in zip(
+    ("include-keywords", "exclude-keywords"),
+    (None, None)
+  )
+]
 checklist_filters = [
-  get_checklist_filter(id_, options, inline)
-  for id_, options, inline in zip(
+  get_checklist_filter(id_, options, inline, tooltip)
+  for id_, options, inline, tooltip in zip(
     ("long-tail-keyword", ),
     ([("Yes", "Yes"), ("No", "No"), ("Maybe", "Maybe")], ),
-    (True, )
+    (True, ),
+    ("A vague indication of if a keyword or a key phrase is more specific than generic", )
   )
 ]
 
