@@ -95,6 +95,19 @@
   display: flex;
 }
 
+#erank-data-wrapper ul.nav.nav-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item > button {
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .erank-keyword-data-card {
   width: 97%;
   margin: 0 1.5% 2px 1.5%;

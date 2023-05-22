@@ -102,49 +102,50 @@ class ErankKeywordData(BaseModel):
   average_searches: Optional[int]
   average_clicks: Optional[int]
   average_ctr: Optional[float] = -1.0
-  average_csi: Optional[float] = -1.0
   etsy_competition: Optional[int]
+  average_csi: Optional[float] = -1.0
   google_searches: Optional[int]
   google_cpc: Optional[float]
   google_competition: Optional[float]
   long_tail_keyword: Literal["Yes", "Maybe", "No"]
   
   @validator("word_count", always=True)
-  def calculate_word_count(cls, word_count):
-    keyword = cls.keyword
+  def calculate_word_count(cls, value, values):
+    keyword = values.get("keyword")
     return len(keyword.split(" "))
 
   @validator("character_count", always=True)
-  def calculate_character_count(cls, character_count):
-    keyword = cls.keyword
+  def calculate_character_count(cls, value, values):
+    keyword = values.get("keyword")
     return len(keyword)
+  
+  @validator("average_searches", "average_clicks", "etsy_competition", "google_searches", "google_cpc", "google_competition", pre=True)
+  def validate_field(cls, value):
+    if isinstance(value, str):
+      if value in ("", "Unknown", "< 20"):
+        return None
+      if "%" in value:
+        value = value.replace("%", "")
+      if "," in value:
+        value = value.replace(",", "")
+    return value
 
   @validator("average_ctr", always=True)
-  def calculate_average_ctr(cls, average_ctr):
-    average_searches = cls.average_searches
-    average_clicks = cls.average_clicks
+  def calculate_average_ctr(cls, value, values):
+    average_searches = values.get("average_searches")
+    average_clicks = values.get("average_clicks")
     if average_clicks is not None and average_searches is not None and average_searches != 0:
       return (average_clicks / average_searches) * 100
     return None
   
   @validator("average_csi", always=True)
-  def calculate_average_csi(cls, average_csi):
-    average_searches = cls.average_searches
-    average_clicks = cls.average_clicks
-    etsy_competition = cls.etsy_competition
+  def calculate_average_csi(cls, value, values):
+    average_searches = values.get("average_searches")
+    average_clicks = values.get("average_clicks")
+    etsy_competition = values.get("etsy_competition")
     if average_clicks is not None and average_searches is not None and etsy_competition is not None and average_searches != 0:
       return (average_clicks / (average_searches * average_searches)) * etsy_competition
     return None
-
-  @validator("average_searches", "average_clicks", "etsy_competition", "google_searches", "google_cpc", "google_competition", pre=True)
-  def validate_field(cls, field_value):
-    if field_value in ("", "Unknown", "< 20"):
-      return None
-    if "%" in field_value:
-      field_value = field_value.replace("%", "")
-    if "," in field_value:
-      field_value = field_value.replace(",", "")
-    return field_value
 
 class ErankKeywordScrapper(WebdriverController):
   __slots__ = tuple()
@@ -178,13 +179,16 @@ class ErankKeywordScrapper(WebdriverController):
     log_in_button = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//button[contains(text(),'Login')]")))
     log_in_button.click()
   
-  def get_keyword_data(self, keyword: str) -> dict[str, dict[str, dict[str, str | int | float | None]]]:
+  def get_keyword_data(self, keyword: str) -> dict[str, list[dict[str, Any]]]:
     keyword_research_data = self.__extract_keyword_research_data(keyword)
     keyword_tool_data = self.__extract_keyword_tool_data(keyword)
     
+    from pprint import pprint
+    pprint(keyword_research_data)
+    
     return {"keyword-tool-data": keyword_tool_data, "keyword-research-data": keyword_research_data}
   
-  def __extract_keyword_research_data(self, keyword: str):
+  def __extract_keyword_research_data(self, keyword: str) -> list[dict[str, Any]]:
     keyword_research_url = f'{self.URL}keyword-explorer?keywords={keyword.replace(" ", "+")}&country=USA&source=etsy'
     soup = BeautifulSoup(self.__get_page_html(keyword_research_url), "lxml")
     tbody: Tag = soup.find("table").find("tbody") # type: ignore
@@ -214,24 +218,22 @@ class ErankKeywordScrapper(WebdriverController):
       return xhr.responseText;
     """)
   
-  def __extract_keyword_tool_data(self, keyword: str) -> dict[str, dict[str, Any]]:
+  def __extract_keyword_tool_data(self, keyword: str) -> list[dict[str, Any]]:
     _json = self.__get_keyword_tool_data_json(keyword)
-    with open(os.path.join(SCRIPT_DIR, "tool_data.json"), mode="w", encoding="utf8") as f:
-      json.dump(_json, f)
-    clean_data = {}
-    for kw_data in _json["keyword_ideas"]["all"]:
-      clean_data[kw_data["keyword"]] = {
-        ERANK_DATA_KEYS.word_count: len(kw_data["keyword"].split(" ")),
-        ERANK_DATA_KEYS.tag_occurrences: kw_data["occurences"],
-        ERANK_DATA_KEYS.average_searches: kw_data["avg_searches"]["order_value"],
-        ERANK_DATA_KEYS.average_clicks: kw_data["avg_clicks"]["order_value"],
-        ERANK_DATA_KEYS.average_ctr: kw_data["ctr"]["order_value"],
-        ERANK_DATA_KEYS.etsy_competition: kw_data["competition"]["value"],
-        ERANK_DATA_KEYS.google_searches: int(kw_data["google"]["avg_searches"].replace(",", "")) if kw_data["google"]["avg_searches"] != "" else None,
-        ERANK_DATA_KEYS.google_cpc: float(kw_data["google"]["cpc"]) if kw_data["google"]["cpc"] != "" else None,
-        ERANK_DATA_KEYS.long_tail: kw_data["longtail"]
-      }
-    return clean_data
+    return [
+      ErankKeywordData( 
+        keyword = kw_data["keyword"],
+        tag_occurrences = kw_data["occurences"],
+        average_searches = kw_data["avg_searches"]["order_value"],
+        average_clicks = kw_data["avg_clicks"]["order_value"],
+        etsy_competition = kw_data["competition"]["value"],
+        google_searches = kw_data["google"]["avg_searches"],
+        google_cpc = kw_data["google"]["cpc"],
+        google_competition = kw_data["google"]["competition"],
+        long_tail_keyword = kw_data["longtail"]
+      ).dict()
+      for kw_data in _json["keyword_ideas"]["all"]
+    ]
   
   def __get_keyword_tool_data_json(self, keyword: str) -> dict[str, Any]:
     return json.loads(self.driver.execute_script(
