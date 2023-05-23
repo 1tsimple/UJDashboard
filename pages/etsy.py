@@ -3,8 +3,7 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 
 from typing import Any
-from itertools import chain
-
+from utils.templates import ErankFilterQuery
 
 dash.register_page(__name__)
 
@@ -17,7 +16,7 @@ def get_min_max_filter(id_, min_ = 0, step = 1, tooltip: str | None = None):
     dbc.Tooltip(id=f"{id_}-tooltip", target=f"{id_}-tooltip-icon-wrapper", placement="bottom", children=tooltip),
     html.Div(id=f"{id_}-filter", className="mix-max-filter", children=[
       dbc.Input(
-        id=f"min-{id_}",
+        id={"type": "erank-filter", "id": f"min-{id_}"},
         type="number",
         min=min_,
         step=step,
@@ -25,7 +24,7 @@ def get_min_max_filter(id_, min_ = 0, step = 1, tooltip: str | None = None):
         placeholder="min"
       ),
       dbc.Input(
-        id=f"max-{id_}",
+        id={"type": "erank-filter", "id": f"max-{id_}"},
         type="number",
         min=min_,
         step=step,
@@ -44,7 +43,7 @@ def get_input_filter(id_, tooltip: str | None = None):
     dbc.Tooltip(id=f"{id_}-tooltip", target=f"{id_}-tooltip-icon-wrapper", placement="bottom", children=tooltip),
     html.Div(id=f"{id_}-filter", className="input-filter", children=[
       dbc.Input(
-        id=id_,
+        id={"type": "erank-filter", "id": id_},
         type="text",
         size="sm",
       )
@@ -60,7 +59,7 @@ def get_checklist_filter(id_, options: list[tuple[str, Any]], inline = False, to
     dbc.Tooltip(id=f"{id_}-tooltip", target=f"{id_}-tooltip-icon-wrapper", placement="bottom", children=tooltip),
     html.Div(id=f"{id_}-filter", className="checklist-filter", children=[
       dbc.Checklist(
-        id=id_,
+        id={"type": "erank-filter", "id": id_},
         options=[{"label": option[0], "value": option[1]} for option in options],
         value=[option[1] for option in options],
         inline=inline
@@ -74,7 +73,7 @@ min_max_filters = [
     ("word-count", "etsy-competition", "google-searches", "google-cpc", "average-searches", "average-clicks", "average-ctr", "average-csi", "tag-occurrences"),
     (0, 0, 0, 0, 0, 0, 0, 0, 0),
     (1, 1, 1, 1, 1, 1, 1, 1, 1),
-    (None, None, None, "(Cost-Per-Click) indicates how much advertisers are prepared to pay for the keyword", None, None, "(Click-Through Rate) The ratio of clicks to searches", "(Competition/Search Index) A measure for effectiveness and competitiveness of a listing, the lower the better", None)
+    (None, None, None, "(Cost-Per-Click) indicates how much advertisers are prepared to pay for the keyword", None, None, "(Click-Through Rate) The ratio of clicks to searches", "(Competition/Search Index) A measurement for effectiveness of a keyword based on it's search volume, ctr and competition, the lower the better", None)
   )
 ]
 input_filters = [
@@ -136,7 +135,8 @@ layout = html.Div(id="content-container", children=[
       ])
     ]),
     html.Div(id="erank-filter-container", children=[
-      html.Div(id="erank-filters", children=all_filters)
+      html.Div(id="erank-filters", children=all_filters),
+      dcc.Store("erank-filter-query", data=ErankFilterQuery().dict())
     ]),
     html.Div(id="erank-data-wrapper", children=[
       dcc.Store("erank-keyword-data-raw", storage_type="session"),
