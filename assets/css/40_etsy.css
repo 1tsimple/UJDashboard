@@ -95,7 +95,7 @@
   height: 31px;
 }
 
-#erank-filters > div:last-child #long-tail-keyword {
+#erank-filters > div:last-child #long-tail-keyword-filter > div {
   display: flex;
   justify-content: space-between;
   margin-top: 4px;
