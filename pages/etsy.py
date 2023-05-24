@@ -151,25 +151,7 @@ layout = html.Div(id="content-container", children=[
           ])
           for col_name in ("keywords", "tag occurrences", "average searches", "average clicks", "average ctr", "average csi", "etsy competition", "google searches", "google cpc", "long tail keyword")
         ]),
-        dcc.Loading(id="erank-data-container", children=[
-          dbc.Alert(
-            id={"type": "erank-keyword-data-card", "id": "keyword"},
-            className="erank-keyword-data-card",
-            children=[
-              html.Div(className="erank-keyword-wrapper", children=html.Span("tshirt")),
-              html.Div(className="erank-tag-occurrences-wrapper", children=html.Span("1")),
-              html.Div(className="erank-average-searches-wrapper", children=html.Span("76437")),
-              html.Div(className="erank-average-clicks-wrapper", children=html.Span("78288")),
-              html.Div(className="erank-average-ctr-wrapper", children=html.Span("102")),
-              html.Div(className="erank-average-csi-wrapper", children=html.Span("0")),
-              html.Div(className="erank-etsy-competition-wrapper", children=html.Span("0")),
-              html.Div(className="erank-google-searches-wrapper", children=html.Span("0")),
-              html.Div(className="erank-google-cpc-wrapper", children=html.Span("0")),
-              html.Div(className="erank-long-tail-keyword-wrapper", children=html.Span("No")),
-              html.Button(id={"type": "erank-keyword-data-card-close-button", "id": "tshirt"}, type="button", className="btn-close")
-            ]
-          )
-        ])
+        dcc.Loading(id="erank-data-container")
       ]),
       html.Div(id="erank-data-container-removed", children=[
         
