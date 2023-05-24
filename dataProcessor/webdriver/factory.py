@@ -125,24 +125,23 @@ class ErankKeywordScrapper(WebdriverController):
     log_in_button = self.wait.until(EC.visibility_of_element_located((By.XPATH, "//button[contains(text(),'Login')]")))
     log_in_button.click()
   
-  def get_keyword_data(self, keyword: str) -> dict[str, list[dict[str, Any]]]:
+  def get_keyword_data(self, keyword: str) -> dict[str, dict[str, dict[str, Any]]]:
     keyword_research_data = self.__extract_keyword_research_data(keyword)
     keyword_tool_data = self.__extract_keyword_tool_data(keyword)
     
     from pprint import pprint
     pprint(keyword_tool_data)
     
-    return {"keyword-tool-data": keyword_tool_data, "keyword-research-data": keyword_research_data}
+    return {"keyword-research-data": keyword_research_data, "keyword-tool-data": keyword_tool_data}
   
-  def __extract_keyword_research_data(self, keyword: str) -> list[dict[str, Any]]:
+  def __extract_keyword_research_data(self, keyword: str) -> dict[str, dict[str, Any]]:
     keyword_research_url = f'{self.URL}keyword-explorer?keywords={keyword.replace(" ", "+")}&country=USA&source=etsy'
     soup = BeautifulSoup(self.__get_page_html(keyword_research_url), "lxml")
     tbody: Tag = soup.find("table").find("tbody") # type: ignore
     rows: list[Tag] = tbody.find_all("tr") # type: ignore
     data: list[list[Any]] = list(map(lambda row: list(map(lambda x: x.text.lstrip().rstrip(), row.find_all("td"))), rows))
-    
-    return [
-      ErankKeywordData( 
+    return {
+      row[0]: ErankKeywordData(
         keyword = row[0],
         tag_occurrences = None,
         average_searches = row[4],
@@ -154,7 +153,7 @@ class ErankKeywordScrapper(WebdriverController):
         long_tail_keyword = row[11]
       ).dict()
       for row in data
-    ]
+    }
   
   def __get_page_html(self, url: str) -> str:
     return self.driver.execute_script(f"""
@@ -164,10 +163,10 @@ class ErankKeywordScrapper(WebdriverController):
       return xhr.responseText;
     """)
   
-  def __extract_keyword_tool_data(self, keyword: str) -> list[dict[str, Any]]:
+  def __extract_keyword_tool_data(self, keyword: str) -> dict[str, dict[str, Any]]:
     _json = self.__get_keyword_tool_data_json(keyword)
-    return [
-      ErankKeywordData( 
+    return {
+      kw_data["keyword"]: ErankKeywordData( 
         keyword = kw_data["keyword"],
         tag_occurrences = kw_data["occurences"],
         average_searches = kw_data["avg_searches"]["order_value"],
@@ -179,7 +178,7 @@ class ErankKeywordScrapper(WebdriverController):
         long_tail_keyword = kw_data["longtail"]
       ).dict()
       for kw_data in _json["keyword_ideas"]["all"]
-    ]
+    }
   
   def __get_keyword_tool_data_json(self, keyword: str) -> dict[str, Any]:
     path = os.path.join(SCRIPT_DIR, "scripts/getKeywordToolData.js")

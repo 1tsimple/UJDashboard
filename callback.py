@@ -1,11 +1,10 @@
 import dash
 import json
-import asyncio
 import pandas as pd
 from dash import Input, Output, State, ALL, MATCH, ctx
 from dash.exceptions import PreventUpdate
 from typing import Any, Literal
-from enum import Enum, StrEnum
+from enum import Enum
 from collections import defaultdict
 
 from database.dBManager import DBManager
@@ -15,6 +14,7 @@ from dataProcessor.webdriver.factory import WebdriverControllerFactory
 
 from components.erankKeyword import get_keyword_data_container
 from utils.binaryTree import ERANK_DATA_KEYS, ErankNode
+from utils.templates import ErankFilterQuery, MinMaxField, SortByField
 
 class FilterState(Enum):
   VISIBLE = {
@@ -30,16 +30,6 @@ Marketplace = {
   "Amazon.ca": "Canada",
   "Amazon.com": "United States"
 }
-
-def str_to_int(text: str, default_value=None, type: Literal["int", "float"]="int") -> int | float | None:
-  try:
-    if type == "int":
-      number = int(text)
-    else:
-      number = float(text)
-  except ValueError:
-    number = default_value
-  return number
 
 class CallbackManager():
   __slots__ = "app", "db", "driver_manager", "driver_factory"
@@ -61,7 +51,7 @@ class CallbackManager():
     self.check_erank_crawler_status()
     self.extract_keyword_data()
     self.filter_keyword_data()
-    self.update_filtered_keywords_html()
+    #self.update_filtered_keywords_html()
     
   
   def refresh_product_filter(self) -> None:
@@ -201,66 +191,59 @@ class CallbackManager():
     @self.app.callback(
       Output("erank-keyword-data-filtered", "data"),
       Input("erank-keyword-data-raw", "data"),
-      Input("min-word-count", "value"),
-      Input("max-word-count", "value"),
-      Input("min-tag-occurrences", "value"),
-      Input("max-tag-occurrences", "value"),
-      Input("min-average-searches", "value"),
-      Input("max-average-searches", "value"),
-      Input("min-average-clicks", "value"),
-      Input("max-average-clicks", "value"),
-      Input("min-average-ctr", "value"),
-      Input("max-average-ctr", "value"),
-      Input("min-etsy-competition", "value"),
-      Input("max-etsy-competition", "value"),
-      Input("min-google-searches", "value"),
-      Input("max-google-searches", "value"),
-      Input("min-google-cpc", "value"),
-      Input("max-google-cpc", "value"),
+      Input({"type": "erank-filter", "id": ALL}, "value"),
       prevent_initial_call=True
     )
     def callback(
-      data: dict[str, dict[str, dict[str, str | int | float | None]]],
-      min_word_count: int|None, max_word_count: int|None,
-      min_tag_occurrences: int|None, max_tag_occurrences: int|None,
-      min_average_searches: int|None, max_average_searches: int|None,
-      min_average_clicks: int|None, max_average_clicks: int|None,
-      min_average_ctr: int|None, max_average_ctr: int|None,
-      min_etsy_competition: int|None, max_etsy_competition: int|None,
-      min_google_searches: int|None, max_google_searches: int|None,
-      min_google_cpc: int|None, max_google_cpc: int|None
+      data: dict[str, dict[str, dict[str, Any]]],
+      filters: list[Any]
     ):
       all_data = data["keyword-research-data"] | data["keyword-tool-data"]
-      __filter = {
-        ERANK_DATA_KEYS.word_count: (min_word_count, max_word_count),
-        ERANK_DATA_KEYS.tag_occurrences: (min_tag_occurrences, max_tag_occurrences),
-        ERANK_DATA_KEYS.average_searches: (min_average_searches, max_average_searches),
-        ERANK_DATA_KEYS.average_clicks: (min_average_clicks, max_average_clicks),
-        ERANK_DATA_KEYS.average_ctr: (min_average_ctr, max_average_ctr),
-        ERANK_DATA_KEYS.etsy_competition: (min_etsy_competition, max_etsy_competition),
-        ERANK_DATA_KEYS.google_searches: (min_google_searches, max_google_searches),
-        ERANK_DATA_KEYS.google_cpc: (min_google_cpc, max_google_cpc),
-        ERANK_DATA_KEYS.long_tail: None
-      }
-      return self.__filter_data(all_data, __filter)
+      filter_query = ErankFilterQuery(
+        word_count=MinMaxField(min=filters[0], max=filters[1]),
+        etsy_competition=MinMaxField(min=filters[2], max=filters[3]),
+        google_searches=MinMaxField(min=filters[4], max=filters[5]),
+        google_cpc=MinMaxField(min=filters[6], max=filters[7]),
+        average_searches=MinMaxField(min=filters[8], max=filters[9]),
+        average_clicks=MinMaxField(min=filters[10], max=filters[11]),
+        average_ctr=MinMaxField(min=filters[12], max=filters[13]),
+        average_csi=MinMaxField(min=filters[14], max=filters[15]),
+        tag_occurrences=MinMaxField(min=filters[16], max=filters[17]),
+        include_keywords=list(map(lambda x: x.rstrip().lstrip(), filters[18].split(","))) if filters[18] else [],
+        exclude_keywords=list(map(lambda x: x.rstrip().lstrip(), filters[19].split(","))) if filters[19] else [],
+        long_tail_keyword=filters[20],
+        sort_by=SortByField(column="average_searches", order="desc")
+      )
+      filtered = self.__filter_data(all_data, filter_query)
+      from pprint import pprint
+      pprint(filtered)
+      return {}
   
   @staticmethod
-  def __filter_data(__data: dict[str, dict[str, str|int|float|None]], __filter: dict[str, tuple[int|None, int|None]]) -> dict[str, dict[str, str|int|float|None]]:
-    filtered = __data.copy()
-    for keyword, data in __data.items():
-      for filter_key, value in data.items():
-        if value is None:
+  def __filter_data(__data: dict[str, dict[str, Any]], __filter: ErankFilterQuery):
+    import time
+    def validate(_data: dict[str, Any], _filter: ErankFilterQuery):
+      semi_dict = dict(_filter)
+      full_dict = _filter.dict()
+      for key, value in _data.items():
+        if key == "character_count" or key == "google_competition" or value is None:
           continue
-        if filter_key == ERANK_DATA_KEYS.long_tail:
-          if __filter[filter_key] is not None and value != __filter[filter_key]:
-            del filtered[keyword]
-            break
+        if key == "keyword":
+          if not all(keyword in value.split(" ") for keyword in full_dict["include_keywords"]):
+            return False
+          if any(keyword in value.split(" ") for keyword in full_dict["exclude_keywords"]):
+            return False
           continue
-        _min, _max = __filter[filter_key]
-        if (_min is not None and _min >= value) or (_max is not None and _max <= value): # type: ignore
-          del filtered[keyword]
-          break
-    return filtered
+        if isinstance(semi_dict[key], MinMaxField):
+          if full_dict[key]["min"] is not None and full_dict[key]["min"] > value:
+            return False
+          if full_dict[key]["max"] is not None and full_dict[key]["max"] < value:
+            return False
+        if key == "long_tail_keyword":
+          if value not in full_dict[key]:
+            return False
+      return True
+    return [data for data in __data.values() if validate(data, __filter)]
   
   def update_filtered_keywords_html(self) -> None:
     @self.app.callback(

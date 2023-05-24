@@ -149,7 +149,7 @@ layout = html.Div(id="content-container", children=[
               html.I(style={"color": "var(--bs-nav-tabs-link-active-color)"})
             ])
           ])
-          for col_name in ("keywords", "tag occurrences", "average searches", "average clicks", "average ctr", "average csr", "etsy competition", "google searches", "google cpc", "long tail keyword")
+          for col_name in ("keywords", "tag occurrences", "average searches", "average clicks", "average ctr", "average csi", "etsy competition", "google searches", "google cpc", "long tail keyword")
         ]),
         dcc.Loading(id="erank-data-container", children=[
           dbc.Alert(
