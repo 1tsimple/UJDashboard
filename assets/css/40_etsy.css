@@ -133,8 +133,9 @@
 }
 
 .erank-keyword-data-card {
-  width: 97%;
-  margin: 0 1.5% 2px 1.5%;
+  width: 99%;
+  margin: 0 0.5% 2px 0.5%;
+  padding: 6px 16px;
   display: flex;
   background-color: white;
   border: 1px solid var(--bg-grey);
@@ -147,6 +148,7 @@
 .erank-keyword-data-card > div {
   display: flex;
   align-items: center;
+  font-size: 14px;
 }
 
 .erank-keyword-data-card > div:nth-last-child(-n+10) {
@@ -173,7 +175,16 @@
 }
 
 .erank-keyword-data-card > button {
+  padding: 5px;
   position: absolute;
   right: 6px;
-  top: calc(50% - 12px);
+  top: 4px;
+  border: none;
+  text-decoration: none;
+  background: none;
+  opacity: 0.6;
+}
+
+.erank-keyword-data-card > button:hover {
+  color: var(--bg-red);
 }

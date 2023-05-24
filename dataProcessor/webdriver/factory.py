@@ -15,9 +15,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup, Tag
-from pydantic import BaseModel, validator, root_validator
 
-from utils.binaryTree import ErankNode, ERANK_DATA_KEYS
+from utils.binaryTree import ErankNode
 from utils.templates import ErankKeywordData
 
 # TODO: add average searches / competition ratio

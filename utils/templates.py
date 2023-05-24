@@ -57,20 +57,14 @@ class ErankKeywordData(BaseModel):
     return None
 
 class MinMaxField(BaseModel):
-  __slots__ = "min", "max"
-  
   min: Optional[int|float]
   max: Optional[int|float]
 
 class SortByField(BaseModel):
-  __slots__ = "column", "order"
-  
   column: Literal["word_count", "etsy_competition", "google_searches", "google_cpc", "average_searches", "average_clicks", "average_ctr", "average_csi", "tag_occurrences", "long_tail_keyword"]
   order: Literal["desc", "asc", None]
 
 class ErankFilterQuery(BaseModel):
-  __slots__ = "word_count", "etsy_competition", "google_searches", "google_cpc", "average_searches", "average_clicks", "average_ctr", "average_csi", "tag_occurrences", "include_keywords", "exclude_keywords", "long_tail_keyword", "sort_by"
-  
   word_count: MinMaxField = MinMaxField(min=None, max=None)
   etsy_competition: MinMaxField = MinMaxField(min=None, max=None)
   google_searches: MinMaxField = MinMaxField(min=None, max=None)

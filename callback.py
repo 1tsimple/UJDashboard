@@ -13,7 +13,7 @@ from dataProcessor.webdriver.manager import DriverControllerManager
 from dataProcessor.webdriver.factory import WebdriverControllerFactory
 
 from components.erankKeyword import get_keyword_data_container
-from utils.binaryTree import ERANK_DATA_KEYS, ErankNode
+from utils.binaryTree import ErankNode
 from utils.templates import ErankFilterQuery, MinMaxField, SortByField
 
 class FilterState(Enum):
@@ -51,7 +51,7 @@ class CallbackManager():
     self.check_erank_crawler_status()
     self.extract_keyword_data()
     self.filter_keyword_data()
-    #self.update_filtered_keywords_html()
+    self.update_filtered_keywords_html()
     
   
   def refresh_product_filter(self) -> None:
@@ -214,14 +214,11 @@ class CallbackManager():
         long_tail_keyword=filters[20],
         sort_by=SortByField(column="average_searches", order="desc")
       )
-      filtered = self.__filter_data(all_data, filter_query)
-      from pprint import pprint
-      pprint(filtered)
-      return {}
+      
+      return (self.__filter_data(all_data, filter_query), filter_query.sort_by.dict())
   
   @staticmethod
-  def __filter_data(__data: dict[str, dict[str, Any]], __filter: ErankFilterQuery):
-    import time
+  def __filter_data(__data: dict[str, dict[str, Any]], __filter: ErankFilterQuery) -> list[dict[str, Any]]:
     def validate(_data: dict[str, Any], _filter: ErankFilterQuery):
       semi_dict = dict(_filter)
       full_dict = _filter.dict()
@@ -251,21 +248,27 @@ class CallbackManager():
       Input("erank-keyword-data-filtered", "data"),
       prevent_initial_call=True
     )
-    def callback(data: dict[str, dict[str, str|int|float|None]]):
-      gen = iter(data)
-      first = next(gen)
-      root = ErankNode(first, data[first], ERANK_DATA_KEYS.average_searches)
-      [root.insert(i, data[i]) for i in gen]
-      
-      return list(map(lambda x: get_keyword_data_container(
-        keyword=x["keyword"],
-        word_count=str(x[ERANK_DATA_KEYS.word_count]),
-        tag_occurrences=str(x[ERANK_DATA_KEYS.tag_occurrences]),
-        average_searches=str(x[ERANK_DATA_KEYS.average_searches]),
-        average_clicks=str(x[ERANK_DATA_KEYS.average_clicks]),
-        average_ctr=str(x[ERANK_DATA_KEYS.average_ctr]),
-        etsy_competition=str(x[ERANK_DATA_KEYS.etsy_competition]),
-        google_searches=str(x[ERANK_DATA_KEYS.google_searches]),
-        google_cpc=str(x[ERANK_DATA_KEYS.google_cpc]),
-        long_tail=str(x[ERANK_DATA_KEYS.long_tail])
-      ), root.traverse()))
+    def callback(__data: tuple[list[dict[str, Any]], dict[str, Any]]):
+      sort_by = __data[1]
+      gen = iter(__data[0])
+      try:
+        first = next(gen)
+      except StopIteration:
+        return []
+      root = ErankNode(first[sort_by["column"]], first)
+      [root.insert(data[sort_by["column"]], data) for data in gen]
+      return [
+        get_keyword_data_container(
+          keyword=sorted_data["keyword"],
+          tag_occurrences=sorted_data["tag_occurrences"],
+          average_searches=sorted_data["average_searches"],
+          average_clicks=sorted_data["average_clicks"],
+          average_ctr=sorted_data["average_ctr"],
+          average_csi=sorted_data["average_csi"],
+          etsy_competition=sorted_data["etsy_competition"],
+          google_searches=sorted_data["google_searches"],
+          google_cpc=sorted_data["google_cpc"],
+          long_tail_keyword=sorted_data["long_tail_keyword"]
+        )
+        for sorted_data in root.traverse()
+      ]

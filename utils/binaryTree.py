@@ -1,46 +1,26 @@
 from typing import Any
 from dataclasses import dataclass
 
-@dataclass(slots=True)
-class ERANK_DATA_KEYS:
-  word_count = "word_count"
-  tag_occurrences = "tag_occurrences"
-  average_searches = "average_searches"
-  average_clicks = "average_clicks"
-  average_ctr = "average_ctr"
-  average_csi = "average_csi"
-  etsy_competition = "etsy_competition"
-  google_searches = "google_searches"
-  google_cpc = "google_cpc"
-  long_tail = "long_tail"
-
 class ErankNode:
-  __slots__ = "left", "right", "key", "value", "data", "_sorted_by"
+  __slots__ = "left", "right", "data", "value"
   
-  def __init__(self, key: str, value: dict[str, Any], sort_by: str) -> None:
+  def __init__(self, value: int|float, data: dict[str, Any]) -> None:
     self.left = None
     self.right = None
-    self.key = key
+    self.data = data
     self.value = value
-    self.data = {"keyword": key} | value
-    self._sorted_by = sort_by
   
-  def insert(self, key: str, value: dict[str, Any]):
-    if self.key is None:
-      self.key = key
-      self.value = value
-      self.data = {"keyword": key} | value
-    else:
-      if value[self._sorted_by] < self.value[self._sorted_by]: # type: ignore
-        if self.left is None:
-          self.left = ErankNode(key, value, self._sorted_by)
-        else:
-          self.left.insert(key, value)
+  def insert(self, value: int|float, data: dict[str, Any]) -> None:
+    if value < self.value:
+      if self.left is None:
+        self.left = ErankNode(value, data)
       else:
-        if self.right is None:
-          self.right = ErankNode(key, value, self._sorted_by)
-        else:
-          self.right.insert(key, value)
+        self.left.insert(value, data)
+    elif value > self.value:
+      if self.right is None:
+        self.right = ErankNode(value, data)
+      else:
+        self.right.insert(value, data)
   
   def traverse(self):
     if self.right is not None:
