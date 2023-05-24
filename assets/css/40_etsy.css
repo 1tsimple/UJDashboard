@@ -119,23 +119,57 @@
   right: 3px;
 }
 
+/* ---------- KEYWORD DATA TABLE START ---------- */
 #erank-data-wrapper ul.nav.nav-tabs {
-  display: flex;
   flex-wrap: nowrap;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  margin: 0 0.5% 10px 0.5%;
+  width: 99%;
+}
+
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-last-child(-n + 9) {
+  display: flex;
+  justify-content: center;
+}
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(1) {
+  min-width: 98px;
+  width: 19%;
+}
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(2),
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(3),
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(7),
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(8) {
+  min-width: 146px;
+  width: 9%;
+}
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(4) {
+  min-width: 127px;
+  width: 9%;
+}
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(5) {
+  min-width: 111px;
+  width: 9%;
+}
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(6),
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(9) {
+  min-width: 107px;
+  width: 9%;
+}
+#erank-data-wrapper ul.nav.nav-tabs > div.nav-item:nth-child(10) {
+  min-width: 154px;
+  width: 9%;
 }
 
 #erank-data-wrapper ul.nav.nav-tabs > div.nav-item > button {
   text-transform: uppercase;
   font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .erank-keyword-data-card {
   width: 99%;
   margin: 0 0.5% 2px 0.5%;
-  padding: 6px 16px;
+  padding: 6px 0;
   display: flex;
   background-color: white;
   border: 1px solid var(--bg-grey);
@@ -146,32 +180,39 @@
 }
 
 .erank-keyword-data-card > div {
-  display: flex;
-  align-items: center;
   font-size: 14px;
+  display: inline-block;
 }
 
-.erank-keyword-data-card > div:nth-last-child(-n+10) {
-  justify-content: center;
+.erank-keyword-data-card > div:nth-child(1) {
+  min-width: 98px;
+  text-align: left;
+  width: 19%;
+  padding-left: 16px;
 }
-
-.erank-keyword-data-card > div:first-child {
-  width: calc(25% - 30px);
-}
-
 .erank-keyword-data-card > div:nth-child(2),
 .erank-keyword-data-card > div:nth-child(3),
-.erank-keyword-data-card > div:nth-child(6),
-.erank-keyword-data-card > div:nth-child(9),
-.erank-keyword-data-card > div:nth-child(10)  {
-  width: 7%;
-}
-
-.erank-keyword-data-card > div:nth-child(4),
-.erank-keyword-data-card > div:nth-child(5),
 .erank-keyword-data-card > div:nth-child(7),
 .erank-keyword-data-card > div:nth-child(8) {
-  width: 10%;
+  min-width: 146px;
+  width: 9%;
+}
+.erank-keyword-data-card > div:nth-child(4) {
+  min-width: 127px;
+  width: 9%;
+}
+.erank-keyword-data-card > div:nth-child(5) {
+  min-width: 111px;
+  width: 9%;
+}
+.erank-keyword-data-card > div:nth-child(6),
+.erank-keyword-data-card > div:nth-child(9) {
+  min-width: 107px;
+  width: 9%;
+}
+.erank-keyword-data-card > div:nth-child(10) {
+  min-width: 154px;
+  width: 9%;
 }
 
 .erank-keyword-data-card > button {
@@ -188,3 +229,4 @@
 .erank-keyword-data-card > button:hover {
   color: var(--bg-red);
 }
+/* ---------- KEYWORD DATA TABLE END ---------- */
