@@ -184,35 +184,6 @@ class ErankKeywordScrapper(WebdriverController):
   def __get_keyword_tool_data_json(self, keyword: str) -> dict[str, Any]:
     path = os.path.join(SCRIPT_DIR, "scripts/getKeywordToolData.js")
     return json.loads(self.driver.execute_script(open(path, encoding="utf8").read(), keyword))
-    
-    json.loads(self.driver.execute_script(
-      """
-        let url = 'https://erank.com/keyword-tool';
-        let data = {{
-          'processFunc': 'etsyCall',
-          'keyword': '{keyword}',
-          'member_id': 1178565,
-          'country': 'USA',
-          'sort_on': 'score'
-        }};
-        let headers = {{
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Referer': 'https://erank.com/keyword-tool?keywords={keyword_query}&country=USA',
-          'Origin': 'https://erank.com'
-        }};
-        let body = new URLSearchParams(data);
-        return fetch(url, {{
-          method: 'POST',
-          headers: headers,
-          body: body
-        }}).then(response => {{
-            if (!response.ok) {{
-              throw new Error(`HTTP error! status: ${{response.status}}`);
-            }}
-            return response.text();
-          }})
-      """.format(keyword=keyword, keyword_query=keyword.replace(" ", "+"))
-    ))
 
 class WebdriverControllerFactory:
   factories = {
